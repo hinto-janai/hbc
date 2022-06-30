@@ -221,8 +221,9 @@ fi
 printf "${BGREEN}%s${OFF}\n" "linking  *************************"
 
 # HEADER
-cat "$TMP_HEADER" > "$out"
+printf "%s" "" > "$out"
 log::tab "[header] -------> line $(wc -l "$out" | cut -f1 -d ' ')"
+cat "$TMP_HEADER" > "$out"
 
 # LIB
 if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
@@ -286,7 +287,7 @@ fi
 local EXISTS_MAIN
 EXISTS_MAIN=$(sed -e "/^#include <.*>$/d" -e '/./,$!d' "$main")
 if [[ $EXISTS_MAIN ]]; then
-	log::tab "[main.sh] -----> line $(wc -l "$out" | cut -f1 -d ' ')"
+	log::tab "[main.sh] ------> line $(wc -l "$out" | cut -f1 -d ' ')"
 	echo >> "$out"
 	echo "$HEADER_MAIN" >> "$out"
 	echo "$EXISTS_MAIN" >> "$out"

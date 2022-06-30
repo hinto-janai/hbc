@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#git <hbc/1b4405c>
-#nix <1656602190>
-#hbc <1b4405c>
+#git <hbc/23a4d38>
+#nix <1656604663>
+#hbc <23a4d38>
 #lib <stdlib/ask.sh/d257147>
 #lib <stdlib/log.sh/d257147>
 #lib <stdlib/trace.sh/d257147>
@@ -350,8 +350,9 @@ fi
 printf "${BGREEN}%s${OFF}\n" "linking  *************************"
 
 # HEADER
-cat "$TMP_HEADER" > "$out"
+printf "%s" "" > "$out"
 log::tab "[header] -------> line $(wc -l "$out" | cut -f1 -d ' ')"
+cat "$TMP_HEADER" > "$out"
 
 # LIB
 if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
