@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-#git <hbc/52be5ad>
-#nix <1656605470>
-#hbc <52be5ad>
-#lib <stdlib/ask.sh/d257147>
-#lib <stdlib/log.sh/d257147>
-#lib <stdlib/trace.sh/d257147>
-#lib <stdlib/var.sh/d257147>
+#git <hbc/f123e56>
+#nix <1656611760>
+#hbc <f123e56>
+#lib <stdlib/ask.sh/0937471>
+#lib <stdlib/log.sh/0937471>
+#lib <stdlib/trace.sh/0937471>
+#lib <stdlib/var.sh/0937471>
 
 #-------------------------------------------------------------------------------- BEGIN LIB CODE
 set -eo pipefail || exit 111
@@ -419,7 +419,7 @@ if [[ $EXISTS_MAIN ]]; then
 	echo >> "$out"
 	log::tab "[main::header] -> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
 	echo "$HEADER_MAIN" >> "$out"
-	log::tab "[main] --------> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
+	log::tab "[main] ---------> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
 	echo "$EXISTS_MAIN" >> "$out"
 	log::tab "[main::endof] --> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
 	echo "$ENDOF_MAIN" >> "$out"
