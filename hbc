@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-#git <hbc/36ae186>
-#nix <1656551044>
-#hbc <877affa>
-#lib <stdlib/ask.sh/413896f>
-#lib <stdlib/log.sh/413896f>
-#lib <stdlib/trace.sh/413896f>
-#lib <stdlib/var.sh/413896f>
+#git <hbc/b7f5adc>
+#nix <1656558201>
+#hbc <b7f5adc>
+#lib <stdlib/ask.sh/0e67503>
+#lib <stdlib/log.sh/0e67503>
+#lib <stdlib/trace.sh/0e67503>
+#lib <stdlib/var.sh/0e67503>
 
 #-------------------------------------------------------------------------------- BEGIN LIB CODE
 set -eo pipefail || exit 111
-trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";while :;do read;done;exit 112' ERR || exit 113
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 113
 ask::yes(){
 	local ASK_FUNC_RESPONSE || return 44
 	read -r ASK_FUNC_RESPONSE
@@ -73,7 +73,7 @@ ___ENDOF___ERROR___TRACE___(){
 	printf "\033[1;91m%s\n" "========  ENDOF ERROR TRACE  ========"
 	unset TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_CODE TRACE_PIPE || exit 66
 	set +e +o pipefail || exit 77
-	trap - EXIT || exit 88
+	trap - ERR || exit 88
 	exit 99
 }
 readonly BLACK="\033[0;30m"
@@ -212,13 +212,13 @@ TMP_SCRATCH="$(mktemp "$TMP_DIR"/scratch.XXXXXXXXXX)"
 local SAFETY_LIB
 SAFETY_LIB=$(cat << 'EOM'
 set -eo pipefail || exit 111
-trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set -eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 113
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 113
 EOM
 )
 local SAFETY_SRC
 SAFETY_SRC=$(cat << 'EOM'
 set -eo pipefail || exit 114
-trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set -eo pipefail;trap - ERR;while :;do read;done;exit 115' ERR || exit 116
+trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 115' ERR || exit 116
 EOM
 )
 local SAFETY_END
