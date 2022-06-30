@@ -222,35 +222,63 @@ printf "${BGREEN}%s${OFF}\n" "linking  *************************"
 
 # HEADER
 cat "$TMP_HEADER" > "$out"
-log::tab "[header] ------> line $(wc -l "$out" | cut -f1 -d ' ')"
+log::tab "[header] -------> line $(wc -l "$out" | cut -f1 -d ' ')"
 
 # LIB
 if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
-	log::tab "[lib::header] -> line $(wc -l "$out" | cut -f1 -d ' ')"
+	log::tab "[lib::header] --> line $(wc -l "$out" | cut -f1 -d ' ')"
 	echo >> "$out"
 	echo "$HEADER_LIB" >> "$out"
-	log::tab "[lib::safety] -> line $(wc -l "$out" | cut -f1 -d ' ')"
+	log::tab "[lib::safety] --> line $(wc -l "$out" | cut -f1 -d ' ')"
 	echo "$SAFETY_LIB" >> "$out"
-	log::tab "[lib] ---------> line $(wc -l "$out" | cut -f1 -d ' ')"
+	log::tab "[lib] ----------> line $(wc -l "$out" | cut -f1 -d ' ')"
 	cat "$TMP_LIB" >> "$out"
+	# DECLARE -FR
+	log::tab "[lib::declare] -> line $(wc -l "$out" | cut -f1 -d ' ')"
+	local FUNCTIONS_LIB
+	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
+		if [[ -z ${FUNCTIONS_LIB[0]} ]]; then
+			log::fail "no functions found"
+			exit 3
+		fi
+		local d
+		for d in ${FUNCTIONS_LIB[@]}; do
+			echo "declare -fr $d" >> "$out"
+		done
+	fi
 fi
 
 # SRC
 if [[ $SRC_FILES ]]; then
-	log::tab "[src::header] -> line $(wc -l "$out" | cut -f1 -d ' ')"
+	log::tab "[src::header] --> line $(wc -l "$out" | cut -f1 -d ' ')"
 	echo >> "$out"
 	echo "$HEADER_SRC" >> "$out"
 	if [[ $DIRECTORY_NAME != *lib ]]; then
-		log::tab "[src::safety] -> line $(wc -l "$out" | cut -f1 -d ' ')"
+		log::tab "[src::safety] --> line $(wc -l "$out" | cut -f1 -d ' ')"
 		echo "$SAFETY_SRC" >> "$out"
 	fi
-	log::tab "[src] ---------> line $(wc -l "$out" | cut -f1 -d ' ')"
+	log::tab "[src] ----------> line $(wc -l "$out" | cut -f1 -d ' ')"
 	cat "$TMP_SRC" >> "$out"
+	# DECLARE -FR
+	if [[ $DIRECTORY_NAME != *lib ]]; then
+		log::tab "[src::declare] -> line $(wc -l "$out" | cut -f1 -d ' ')"
+		local FUNCTIONS_SRC
+		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
+			if [[ -z ${FUNCTIONS_SRC[0]} ]]; then
+				log::fail "no functions found"
+				exit 3
+			fi
+			local d
+			for d in ${FUNCTIONS_SRC[@]}; do
+				echo "declare -fr $d" >> "$out"
+			done
+		fi
+	fi
 fi
 
 # SAFETY END
 if [[ $DIRECTORY_NAME != *lib ]]; then
-	log::tab "[safety::end] -> line $(wc -l "$out" | cut -f1 -d ' ')"
+	log::tab "[safety::end] --> line $(wc -l "$out" | cut -f1 -d ' ')"
 	echo "$SAFETY_END" >> "$out"
 fi
 
