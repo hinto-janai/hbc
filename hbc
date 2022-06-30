@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#git <hbc/1407bd7>
-#nix <1656605007>
-#hbc <1407bd7>
+#git <hbc/b92a8dc>
+#nix <1656605262>
+#hbc <b92a8dc>
 #lib <stdlib/ask.sh/d257147>
 #lib <stdlib/log.sh/d257147>
 #lib <stdlib/trace.sh/d257147>
@@ -115,31 +115,18 @@ readonly IPURPLE="\033[0;95m"
 readonly ICYAN="\033[0;96m"
 readonly IWHITE="\033[0;97m"
 readonly OFF="\033[0m"
-
 declare -fr ask::yes
-
 declare -fr ask::no
-
 declare -fr ask::sudo
-
 declare -fr log::dot
-
 declare -fr log::prog
-
 declare -fr log::tab
-
 declare -fr log::ok
-
 declare -fr log::info
-
 declare -fr log::warn
-
 declare -fr log::fail
-
 declare -fr log::danger
-
 declare -fr ___BEGIN___ERROR___TRACE___
-
 declare -fr ___ENDOF___ERROR___TRACE___
 trap - ERR || exit 117
 set +eo pipefail || exit 118
@@ -386,7 +373,6 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
 		fi
 		local d
 		for d in ${FUNCTIONS_LIB[@]}; do
-	echo >> "$out"
 			echo "declare -fr $d" >> "$out"
 		done
 	fi
@@ -431,9 +417,11 @@ local EXISTS_MAIN
 EXISTS_MAIN=$(sed -e "/^#include <.*>$/d" -e '/./,$!d' "$main")
 if [[ $EXISTS_MAIN ]]; then
 	echo >> "$out"
-	log::tab "[main.sh] ------> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
+	log::tab "[main::header] -> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
 	echo "$HEADER_MAIN" >> "$out"
+	log::tab "[main] ------> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
 	echo "$EXISTS_MAIN" >> "$out"
+	log::tab "[main::endof] --> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
 	echo "$ENDOF_MAIN" >> "$out"
 fi
 

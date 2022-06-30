@@ -288,9 +288,11 @@ local EXISTS_MAIN
 EXISTS_MAIN=$(sed -e "/^#include <.*>$/d" -e '/./,$!d' "$main")
 if [[ $EXISTS_MAIN ]]; then
 	echo >> "$out"
-	log::tab "[main.sh] ------> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
+	log::tab "[main::header] -> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
 	echo "$HEADER_MAIN" >> "$out"
+	log::tab "[main] --------> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
 	echo "$EXISTS_MAIN" >> "$out"
+	log::tab "[main::endof] --> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
 	echo "$ENDOF_MAIN" >> "$out"
 fi
 
@@ -311,7 +313,7 @@ log::info "deleting $TMP_DIR"
 rm -rf "$TMP_DIR"
 
 # FINAL
-log::ok "hbc done"
+log::ok "hbc done: $out"
 ___ENDOF___ERROR___TRACE___
 }
 hbc $@
