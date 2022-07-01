@@ -4,14 +4,61 @@
 #include <stdlib/var.sh>
 
 hbc() {
+#-------------------------------------------------------------------------------- HBC OPTIONS
+___BEGIN___ERROR___TRACE___
+unset main OUTPUT
+while [[ $# != 0 ]]; do
+if [[ $1 = "-h" || $1 = "--help" ]]; then
+cat << EOM
+HBC USAGE
+    -d | --delete                       overwrite output file if it already exists
+    -m | --main    <main script name>   specify main script name, default: [main.sh]
+    -h | --help                         print this help message and exit unsuccessfully
+    -o | --output  <output name>        specify output filename, default: [${FOLDER_NAME}.sh]
+    -r | --run                          run output file if hbc successfully compiles
+    -q | --quiet                        suppress hbc compile-time output (exit codes stay)
+    -v | --version                      print this hbc's time of compile and exit unsuccessfully
+EOM
+exit 2
+elif [[ $1 = "-v" || $1 = "--version" ]]; then
+	date -d @"$(grep -m1 "#nix <.*>$" "$0" | tr -d '#nix<> ')"
+	exit 3
+fi
+case $1 in
+	-d | --delete) local OPTION_DELETE=true; shift;;
+	-m | --main)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --main"
+			exit 1
+		fi
+		local main="$1"; shift;;
+	-o | --output)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --output"
+			exit 1
+		fi
+		OUTPUT="$1"; shift;;
+	-r | --run) OPTION_RUN=true; shift;;
+	-q | --quiet) OPTION_QUIET=true; shift;;
+	*) log::fail "hbc: invalid option: $1"; exit 1;;
+esac
+done
+___ENDOF___ERROR___TRACE___
+
 #-------------------------------------------------------------------------------- SANITY CHECKS
 # NO SRC DIR
-if [[ ! -d src ]]; then
+if [[ ! -d src && $OPTION_QUIET != true ]]; then
 	log::warn "no src directory found"
 fi
 
 # MAIN SCRIPT
-local main="main.sh"
+[[ -z $main ]] && local main="main.sh"
+if [[ ! -e $main ]]; then
+	log::fail "hbc: $main not found"
+	exit 1
+fi
 
 # BOTH LIB/SRC NOT FOUND
 local EXISTS_LIB=true
@@ -25,33 +72,33 @@ if ! grep -m1 "^#include <.*>$" "$main" &>/dev/null; then
 	fi
 fi
 
-# ERROR INPUT
-if [[ $# -gt 1 ]]; then
-	log::warn "args -gt 1"
-	exit 1
-elif [[ ! -f main.sh ]]; then
-	log::warn "no main.sh found"
-	exit 1
-fi
-
 # $1 OUT.SH NAMING
 local DIRECTORY_NAME
 DIRECTORY_NAME="$(basename "$PWD")"
-local out
-if [[ $1 ]]; then
-	out="$1"
-elif [[ $DIRECTORY_NAME = hbc ]]; then
-	out="hbc"
-else
-	out="${DIRECTORY_NAME}.sh"
+if [[ $DIRECTORY_NAME = hbc && -z $OUTPUT ]]; then
+	OUTPUT="hbc"
+elif [[ -z $OUTPUT ]]; then
+	OUTPUT="${DIRECTORY_NAME}.sh"
+fi
+
+# IF MAIN/OUT ARE WEIRD CHARACTERS
+if [[ $main != [A-Za-z0-9_]* ]]; then
+	log::fail "hbc: \$main contains weird characters; only [A-Za-z0-9_] is supported"
+	exit 1
+elif [[ $OUTPUT != [A-Za-z0-9_]* ]]; then
+	log::fail "hbc: \$OUTPUT contains weird characters; only [A-Za-z0-9_] is supported"
+	exit 1
 fi
 
 # OUT ALREADY EXISTS WARNING
-if [[ -e ${out} ]]; then
-	log::warn "${out} already exists"
+if [[ -e $OUTPUT && $OPTION_DELETE != true ]]; then
+	log::warn "$OUTPUT already exists"
 	printf "%s" "         overwrite? (y/N) "
 	ask::no && exit 2
 fi
+
+# QUIET OPTION
+[[ $OPTION_QUIET = true ]] && exec 3>&1 &>/dev/null
 
 #-------------------------------------------------------------------------------- VARIABLE INIT
 ___BEGIN___ERROR___TRACE___
@@ -130,7 +177,7 @@ if [[ $DIRECTORY_GIT ]]; then
 	if [[ $DIRECTORY_NAME = hbc ]]; then
 		echo "#git <hbc/${DIRECTORY_GIT}>" >> "$TMP_HEADER"
 	else
-		echo "#git <${out}/${DIRECTORY_GIT}>" >> "$TMP_HEADER"
+		echo "#git <${OUTPUT}/${DIRECTORY_GIT}>" >> "$TMP_HEADER"
 	fi
 else
 	log::warn "git: no hash found"
@@ -221,21 +268,21 @@ fi
 printf "${BGREEN}%s${OFF}\n" "linking  *************************"
 
 # HEADER
-printf "%s" "" > "$out"
-log::tab "[header] -------> line $(wc -l "$out" | cut -f1 -d ' ')"
-cat "$TMP_HEADER" > "$out"
+printf "%s" "" > "$OUTPUT"
+log::tab "[header] -------> line $(wc -l "$OUTPUT" | cut -f1 -d ' ')"
+cat "$TMP_HEADER" > "$OUTPUT"
 
 # LIB
 if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
-	echo >> "$out"
-	log::tab "[lib::header] --> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-	echo "$HEADER_LIB" >> "$out"
-	log::tab "[lib::safety] --> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-	echo "$SAFETY_LIB" >> "$out"
-	log::tab "[lib] ----------> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-	cat "$TMP_LIB" >> "$out"
+	echo >> "$OUTPUT"
+	log::tab "[lib::header] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	echo "$HEADER_LIB" >> "$OUTPUT"
+	log::tab "[lib::safety] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	echo "$SAFETY_LIB" >> "$OUTPUT"
+	log::tab "[lib] ----------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	cat "$TMP_LIB" >> "$OUTPUT"
 	# DECLARE -FR
-	log::tab "[lib::declare] -> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
+	log::tab "[lib::declare] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	local FUNCTIONS_LIB
 	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
 		if [[ -z ${FUNCTIONS_LIB[0]} ]]; then
@@ -244,25 +291,25 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
 		fi
 		local d
 		for d in ${FUNCTIONS_LIB[@]}; do
-			echo "declare -fr $d" >> "$out"
+			echo "declare -fr $d" >> "$OUTPUT"
 		done
 	fi
 fi
 
 # SRC
 if [[ $SRC_FILES ]]; then
-	echo >> "$out"
-	log::tab "[src::header] --> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-	echo "$HEADER_SRC" >> "$out"
+	echo >> "$OUTPUT"
+	log::tab "[src::header] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	echo "$HEADER_SRC" >> "$OUTPUT"
 	if [[ $DIRECTORY_NAME != *lib ]]; then
-		log::tab "[src::safety] --> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-		echo "$SAFETY_SRC" >> "$out"
+		log::tab "[src::safety] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+		echo "$SAFETY_SRC" >> "$OUTPUT"
 	fi
-	log::tab "[src] ----------> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-	cat "$TMP_SRC" >> "$out"
+	log::tab "[src] ----------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	cat "$TMP_SRC" >> "$OUTPUT"
 	# DECLARE -FR
 	if [[ $DIRECTORY_NAME != *lib ]]; then
-		log::tab "[src::declare] -> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
+		log::tab "[src::declare] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 		local FUNCTIONS_SRC
 		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
 			if [[ -z ${FUNCTIONS_SRC[0]} ]]; then
@@ -271,7 +318,7 @@ if [[ $SRC_FILES ]]; then
 			fi
 			local d
 			for d in ${FUNCTIONS_SRC[@]}; do
-				echo "declare -fr $d" >> "$out"
+				echo "declare -fr $d" >> "$OUTPUT"
 			done
 		fi
 	fi
@@ -279,41 +326,52 @@ fi
 
 # SAFETY END
 if [[ $DIRECTORY_NAME != *lib ]]; then
-	log::tab "[safety::end] --> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-	echo "$SAFETY_END" >> "$out"
+	log::tab "[safety::end] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	echo "$SAFETY_END" >> "$OUTPUT"
 fi
 
 # MAIN
 local EXISTS_MAIN
 EXISTS_MAIN=$(sed -e "/^#include <.*>$/d" -e '/./,$!d' "$main")
 if [[ $EXISTS_MAIN ]]; then
-	echo >> "$out"
-	log::tab "[main::header] -> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-	echo "$HEADER_MAIN" >> "$out"
-	log::tab "[main] ---------> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-	echo "$EXISTS_MAIN" >> "$out"
-	log::tab "[main::endof] --> line $(($(wc -l "$out" | cut -f1 -d ' ')+1))"
-	echo "$ENDOF_MAIN" >> "$out"
+	echo >> "$OUTPUT"
+	log::tab "[main::header] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	echo "$HEADER_MAIN" >> "$OUTPUT"
+	log::tab "[main] ---------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	echo "$EXISTS_MAIN" >> "$OUTPUT"
+	log::tab "[main::endof] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	echo "$ENDOF_MAIN" >> "$OUTPUT"
 fi
 
 # END STATS (WC)
-log::tab "[${out}] total lines: $(wc -l "$out" | cut -f1 -d ' ')"
+log::tab "[${OUTPUT}] total lines: $(wc -l "$OUTPUT" | cut -f1 -d ' ')"
 
 #-------------------------------------------------------------------------------- END
 # CHMOD PERMISSIONS
 log::info "700 permissions"
-chmod 700 "${out}"
+chmod 700 "${OUTPUT}"
 
 # SHELLCHECK
 log::info "starting shellcheck"
-shellcheck "${out}" --shell bash -e SC2274,SC2068,SC2128,SC2086,SC1036,SC1088,SC2153,SC2034,SC2155,SC2207,SC2119,SC2120,SC2044,SC2035,SC2129
+shellcheck "${OUTPUT}" --shell bash -e SC2274,SC2068,SC2128,SC2086,SC1036,SC1088,SC2153,SC2034,SC2155,SC2207,SC2119,SC2120,SC2044,SC2035,SC2129
 
 # DELETE TMP_DIR
 log::info "deleting $TMP_DIR"
 rm -rf "$TMP_DIR"
 
 # FINAL
-log::ok "$out"
+log::ok "$OUTPUT"
 ___ENDOF___ERROR___TRACE___
+return 0
 }
+# EXECUTE
 hbc $@
+if [[ $? = 0 && $OPTION_RUN = true ]]; then
+	if [[ $OPTION_QUIET = true ]]; then
+		exec ./"$OUTPUT" >&3
+	else
+		exec ./"$OUTPUT"
+	fi
+else
+	exit 0
+fi
