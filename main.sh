@@ -12,11 +12,12 @@ if [[ $1 = "-h" || $1 = "--help" ]]; then
 cat << EOM
 HBC USAGE
     -d | --delete                       overwrite output file if it already exists
+	-i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: SC2154,SC2155
     -m | --main    <main script name>   specify main script name, default: [main.sh]
     -h | --help                         print this help message and exit unsuccessfully
     -o | --output  <output name>        specify output filename, default: [${FOLDER_NAME}.sh]
-    -r | --run                          run output file if hbc successfully compiles
     -q | --quiet                        suppress hbc compile-time output (exit codes stay)
+    -r | --run                          run output file if hbc successfully compiles
     -v | --version                      print this hbc's time of compile and exit unsuccessfully
 EOM
 exit 2
@@ -26,6 +27,7 @@ elif [[ $1 = "-v" || $1 = "--version" ]]; then
 fi
 case $1 in
 	-d | --delete) local OPTION_DELETE=true; shift;;
+	-i | --ignore) shift; local OPTION_IGNORE="$1"; shift;;
 	-m | --main)
 		shift
 		if [[ -z $1 ]]; then
@@ -353,7 +355,7 @@ chmod 700 "${OUTPUT}"
 
 # SHELLCHECK
 log::info "starting shellcheck"
-shellcheck "${OUTPUT}" --shell bash -e SC2274,SC2068,SC2128,SC2086,SC1036,SC1088,SC2153,SC2034,SC2155,SC2207,SC2119,SC2120,SC2044,SC2035,SC2129
+shellcheck "${OUTPUT}" --shell bash -e SC2274,SC2068,SC2128,SC2086,SC1036,SC1088,SC2153,SC2034,SC2155,SC2207,SC2119,SC2120,SC2044,SC2035,SC2129,${OPTION_IGNORE}
 
 # DELETE TMP_DIR
 log::info "deleting $TMP_DIR"
