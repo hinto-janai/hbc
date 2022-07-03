@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#git <hbc/fd95c83>
-#nix <1656863995>
-#hbc <2e95561>
+#git <hbc/014b3f7>
+#nix <1656865256>
+#hbc <fd95c83>
 #lib <stdlib/ask.sh/6cf3ad6>
 #lib <stdlib/log.sh/6cf3ad6>
 #lib <stdlib/trace.sh/6cf3ad6>
@@ -171,7 +171,7 @@ while [[ $# != 0 ]]; do
 # HELP OPTION
 if [[ $1 = "-h" || $1 = "--help" ]]; then
 cat << EOM
-HBC USAGE
+USAGE: hbc [OPTION] [ARGUMENT]
     -d | --delete                       overwrite output file if it already exists
     -i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: -i SC2154,SC2155
     -m | --main    <main script name>   specify main script name, default: [main.sh]

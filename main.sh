@@ -12,7 +12,7 @@ while [[ $# != 0 ]]; do
 # HELP OPTION
 if [[ $1 = "-h" || $1 = "--help" ]]; then
 cat << EOM
-HBC USAGE
+USAGE: hbc [OPTION] [ARGUMENT]
     -d | --delete                       overwrite output file if it already exists
     -i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: -i SC2154,SC2155
     -m | --main    <main script name>   specify main script name, default: [main.sh]
