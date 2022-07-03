@@ -113,9 +113,7 @@ local ENDOF_MAIN="#-------------------------------------------------------------
 
 # GIT HASH
 local DIRECTORY_GIT
-if DIRECTORY_GIT=$(git rev-parse --short HEAD 2>/dev/null); then
-	:
-fi
+DIRECTORY_GIT=$(git rev-parse --short HEAD 2>/dev/null) || true
 
 # HBC VERSION
 local VERSION_HBC
@@ -150,14 +148,18 @@ TMP_SCRATCH="$(mktemp "$TMP_DIR"/scratch.XXXXXXXXXX)"
 # SAFETY HEADERS
 local SAFETY_LIB
 SAFETY_LIB=$(cat << 'EOM'
+POSIXLY_CORRECT=;\unset -f trap set unset declare exit printf read unalias;\unalias -a
 set -eo pipefail || exit 111
-trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 113
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
+unset POSIXLY_CORRECT || exit 113
 EOM
 )
 local SAFETY_SRC
 SAFETY_SRC=$(cat << 'EOM'
+POSIXLY_CORRECT=;\unset -f trap set unset declare exit printf read unalias;\unalias -a
 set -eo pipefail || exit 114
-trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 115' ERR || exit 116
+trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 115' ERR || exit 115
+unset POSIXLY_CORRECT || exit 116
 EOM
 )
 local SAFETY_END
