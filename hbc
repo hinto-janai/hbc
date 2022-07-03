@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#git <hbc/2e95561>
-#nix <1656861774>
-#hbc <2e95561>
+#git <hbc/fd95c83>
+#nix <1656863998>
+#hbc <fd95c83>
 #lib <stdlib/ask.sh/6cf3ad6>
 #lib <stdlib/log.sh/6cf3ad6>
 #lib <stdlib/trace.sh/6cf3ad6>
@@ -191,7 +191,13 @@ fi
 # SHORT+LONG OPTIONS
 case $1 in
 	-d | --delete) local OPTION_DELETE=true; shift;;
-	-i | --ignore) shift; local OPTION_IGNORE="$1"; shift;;
+	-i | --ignore)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --ignore"
+			exit 1
+		fi
+		local OPTION_IGNORE="$1"; shift;;
 	-m | --main)
 		shift
 		if [[ -z $1 ]]; then

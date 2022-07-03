@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#git <hbc/54d8e7c>
-#nix <1656861284>
-#hbc <54d8e7c>
+#git <hbc/fd95c83>
+#nix <1656863995>
+#hbc <2e95561>
 #lib <stdlib/ask.sh/6cf3ad6>
 #lib <stdlib/log.sh/6cf3ad6>
 #lib <stdlib/trace.sh/6cf3ad6>
@@ -179,7 +179,7 @@ HBC USAGE
     -o | --output  <output name>        specify output filename, default: [${FOLDER_NAME}.sh]
     -q | --quiet                        suppress hbc compile-time output (exit codes stay)
     -r | --run                          run output file if hbc successfully compiles
-	-t | --test                         --run & --quiet the output from memory, no file made
+    -t | --test                         --run & --quiet the output from memory, no file made
     -v | --version                      print this hbc's time of compile and exit unsuccessfully
 EOM
 exit 2
@@ -191,7 +191,13 @@ fi
 # SHORT+LONG OPTIONS
 case $1 in
 	-d | --delete) local OPTION_DELETE=true; shift;;
-	-i | --ignore) shift; local OPTION_IGNORE="$1"; shift;;
+	-i | --ignore)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --ignore"
+			exit 1
+		fi
+		local OPTION_IGNORE="$1"; shift;;
 	-m | --main)
 		shift
 		if [[ -z $1 ]]; then

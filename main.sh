@@ -32,7 +32,13 @@ fi
 # SHORT+LONG OPTIONS
 case $1 in
 	-d | --delete) local OPTION_DELETE=true; shift;;
-	-i | --ignore) shift; local OPTION_IGNORE="$1"; shift;;
+	-i | --ignore)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --ignore"
+			exit 1
+		fi
+		local OPTION_IGNORE="$1"; shift;;
 	-m | --main)
 		shift
 		if [[ -z $1 ]]; then
