@@ -12,7 +12,7 @@ if [[ $1 = "-h" || $1 = "--help" ]]; then
 cat << EOM
 HBC USAGE
     -d | --delete                       overwrite output file if it already exists
-	-i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: SC2154,SC2155
+    -i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: SC2154,SC2155
     -m | --main    <main script name>   specify main script name, default: [main.sh]
     -h | --help                         print this help message and exit unsuccessfully
     -o | --output  <output name>        specify output filename, default: [${FOLDER_NAME}.sh]
