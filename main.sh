@@ -396,9 +396,9 @@ return 0
 hbc $@
 if [[ $? = 0 && $OPTION_RUN = true ]]; then
 	if [[ $OPTION_TEST = true ]]; then
-		exec "$OUTPUT" >&3 &
-		wait
-		rm -rf "$TMP_DIR"
+		trap 'trap - EXIT; rm -rf "$TMP_DIR"' EXIT
+		bash "$OUTPUT" >&3
+		exit $?
 	elif [[ $OPTION_QUIET = true ]]; then
 		exec ./"$OUTPUT" >&3
 	else
