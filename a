@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#git <hbc/3de2b50>
-#nix <1656866527>
-#hbc <014b3f7>
+#git <hbc/5648167>
+#nix <1656901213>
+#hbc <2f32310>
 #lib <stdlib/ask.sh/6cf3ad6>
 #lib <stdlib/log.sh/6cf3ad6>
 #lib <stdlib/trace.sh/6cf3ad6>
@@ -40,21 +40,33 @@ log::warn() { printf "\033[1;33m[ WARN ]\033[0m %s\n" "$@" ;}
 log::fail() { printf "\033[1;31m[ FAIL ]\033[0m %s\n" "$@" ;}
 log::danger() { printf "\033[1;31m[DANGER]\033[0m %s\n" "$@" ;}
 ___BEGIN___ERROR___TRACE___() {
+	POSIXLY_CORRECT= || exit 8
+	\unset -f trap set return exit printf unset local return read unalias mapfile kill builtin || exit 9
+	\unalias -a || exit 10
+	unset POSIXLY_CORRECT || exit 11
 	trap 'TRACE_CMD="$BASH_COMMAND" TRACE_FUNC="${BASH_LINENO[@]}" TRACE_CMD_NUM="$LINENO" TRACE_PIPE="${PIPESTATUS[@]}"; ___ENDOF___ERROR___TRACE___ || exit 100' ERR || exit 12
 	unset -v TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_PIPE || exit 13
 	set -E -e -o pipefail || exit 14
 	return 0
 }
 ___ENDOF___ERROR___TRACE___() {
+	POSIXLY_CORRECT= || exit 15
+	\unset -f trap set return exit printf unset local return read unalias mapfile kill builtin || exit 16
+	\unalias -a || exit 17
+	unset POSIXLY_CORRECT || exit 18
 	if [[ -z $TRACE_PIPE ]]; then
-		POSIXLY_CORRECT= || exit 15
-		\unset -f trap set return exit return || exit 16
-		\unalias -a || exit 17
-		unset POSIXLY_CORRECT || exit 18
-		unset -v TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_PIPE || exit 19
-		set +E +eo pipefail || exit 20
-		trap - ERR || exit 21
+		POSIXLY_CORRECT= || exit 19
+		\unset -f trap set return exit return || exit 20
+		\unalias -a || exit 21
+		unset POSIXLY_CORRECT || exit 22
+		unset -v TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_PIPE || exit 23
+		set +E +eo pipefail || exit 24
+		trap - ERR || exit 25
 		return 0
+	fi
+	if [[ $TRACE_CMD =~ ^\(.*\)$ ]]; then
+		printf "\033[1;93m%s\n" "========    SHELLS KILLED    ========"
+		builtin kill $$ || exit 101
 	fi
 	printf "\033[1;91m%s\n" "========  BEGIN ERROR TRACE  ========"
 	printf "\033[1;95m%s\033[0m%s\n" "[bash] " "$BASH_VERSION"
@@ -103,9 +115,9 @@ ___ENDOF___ERROR___TRACE___() {
 		((TRACE_CMD_NUM++))
 	done
 	printf "\033[1;91m%s\033[0m\n" "========  ENDOF ERROR TRACE  ========"
-	unset -v TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_PIPE || exit 22
-	set +E +eo pipefail || exit 23
-	trap - ERR || exit 24
+	unset -v TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_PIPE || exit 26
+	set +E +eo pipefail || exit 27
+	trap - ERR || exit 28
 	exit 99
 }
 readonly BLACK="\033[0;30m"
@@ -172,7 +184,7 @@ USAGE: hbc [OPTION] [ARGUMENT]
     -i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: -i SC2154,SC2155
     -m | --main    <main script name>   specify main script name, default: [main.sh]
     -h | --help                         print this help message and exit unsuccessfully
-    -o | --output  <output name>        specify output filename, default: [${FOLDER_NAME}.sh]
+    -o | --output  <output name>        specify output filename, default: [\$FOLDER_NAME.sh]
     -q | --quiet                        suppress hbc compile-time output (exit codes stay)
     -r | --run                          run output file if hbc successfully compiles
     -t | --test                         --run & --quiet the output from memory, no file made

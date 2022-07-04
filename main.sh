@@ -17,7 +17,7 @@ USAGE: hbc [OPTION] [ARGUMENT]
     -i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: -i SC2154,SC2155
     -m | --main    <main script name>   specify main script name, default: [main.sh]
     -h | --help                         print this help message and exit unsuccessfully
-    -o | --output  <output name>        specify output filename, default: [${FOLDER_NAME}.sh]
+    -o | --output  <output name>        specify output filename, default: [\$FOLDER_NAME.sh]
     -q | --quiet                        suppress hbc compile-time output (exit codes stay)
     -r | --run                          run output file if hbc successfully compiles
     -t | --test                         --run & --quiet the output from memory, no file made
