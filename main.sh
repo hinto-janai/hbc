@@ -96,11 +96,11 @@ elif [[ -z $OUTPUT ]]; then
 fi
 
 # IF MAIN/OUT ARE WEIRD CHARACTERS
-if [[ $main != [A-Za-z0-9_]* ]]; then
-	log::fail "hbc: \$main contains weird characters; only [A-Za-z0-9_] is supported"
+if [[ $main != [A-Za-z0-9_/~$]* ]]; then
+	log::fail "hbc: \$main contains weird characters; only [A-Za-z0-9_/~$] is supported"
 	exit 1
-elif [[ $OUTPUT != [A-Za-z0-9_]* ]]; then
-	log::fail "hbc: \$OUTPUT contains weird characters; only [A-Za-z0-9_] is supported"
+elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
+	log::fail "hbc: \$OUTPUT contains weird characters; only [A-Za-z0-9_/~$] is supported"
 	exit 1
 fi
 

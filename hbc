@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#git <hbc/5648167>
-#nix <1656901215>
-#hbc <5648167>
+#git <hbc/4e4a312>
+#nix <1656901932>
+#hbc <4e4a312>
 #lib <stdlib/ask.sh/6cf3ad6>
 #lib <stdlib/log.sh/6cf3ad6>
 #lib <stdlib/trace.sh/6cf3ad6>
@@ -73,8 +73,8 @@ ___ENDOF___ERROR___TRACE___() {
 	printf "\033[1;96m%s\033[0m%s\n" "[unix] " "$EPOCHSECONDS"
 	printf "\033[1;91m%s\033[0m%s\n" "[code] " "${TRACE_PIPE[@]}"
 	printf "\033[1;97m%s\033[0m%s\n" "[file] " "${BASH_SOURCE[-1]}"
-	printf "\033[1;93m%s\033[0m%s\n" "[ wd ] " "$PWD"
-	printf "\033[1;94m%s\033[0m%s\n" "[ \$_ ] " "${TRACE_CMD_NUM}: $TRACE_CMD"
+	printf "\033[1;94m%s\033[0m%s\n" "[ wd ] " "$PWD"
+	printf "\033[1;93m%s\033[0m%s\n" "[ \$_ ] " "${TRACE_CMD_NUM}: $TRACE_CMD"
 	local f
 	local i=1
 	for f in ${TRACE_FUNC[@]}; do
@@ -263,11 +263,11 @@ elif [[ -z $OUTPUT ]]; then
 fi
 
 # IF MAIN/OUT ARE WEIRD CHARACTERS
-if [[ $main != [A-Za-z0-9_]* ]]; then
-	log::fail "hbc: \$main contains weird characters; only [A-Za-z0-9_] is supported"
+if [[ $main != [A-Za-z0-9_/~$]* ]]; then
+	log::fail "hbc: \$main contains weird characters; only [A-Za-z0-9_/~$] is supported"
 	exit 1
-elif [[ $OUTPUT != [A-Za-z0-9_]* ]]; then
-	log::fail "hbc: \$OUTPUT contains weird characters; only [A-Za-z0-9_] is supported"
+elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
+	log::fail "hbc: \$OUTPUT contains weird characters; only [A-Za-z0-9_/~$] is supported"
 	exit 1
 fi
 
