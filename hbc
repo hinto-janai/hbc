@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#git <hbc/f87076b>
-#nix <1656989389>
-#hbc <f78c459>
+#git <hbc/ee7ab17>
+#nix <1657043095>
+#hbc <f87076b>
 #lib <stdlib/ask.sh/6cf3ad6>
 #lib <stdlib/log.sh/6cf3ad6>
 #lib <stdlib/trace.sh/6cf3ad6>
@@ -159,7 +159,8 @@ ___ENDOF___ERROR___TRACE___() {
 	unset -v TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_PIPE || exit 26
 	set +E +eo pipefail || exit 27
 	trap - ERR || exit 28
-	builtin kill -s SIGKILL $$ & exit 99
+	builtin kill -s SIGKILL $$
+	exit 99
 	printf "\033[1;97m%s\033[0m\n" "= KILL FAIL, ENTERING INFINITE LOOP ="
 	while :; do read -s -r; done
 }

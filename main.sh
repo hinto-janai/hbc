@@ -134,7 +134,7 @@ local ENDOF_MAIN="#-------------------------------------------------------------
 
 # GIT HASH
 local DIRECTORY_GIT
-DIRECTORY_GIT=$(git rev-parse --short HEAD 2>/dev/null) || true
+DIRECTORY_GIT=$(git rev-parse --short HEAD 2>/dev/null) || unset DIRECTORY_GIT
 
 # HBC VERSION
 local VERSION_HBC
@@ -228,12 +228,15 @@ echo "#hbc <$VERSION_HBC>" >> "$TMP_HEADER"
 if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
 	printf "${BPURPLE}%s${OFF}\n" "compiling [lib] ******************"
 	local i
+	# include each found #include in TMP_LIB
 	for i in $(grep "^#include <.*>$" "$main" | cut -d ' ' -f2 | tr -d '<>' | sort); do
 		if [[ $i = *.sh && -f "$LIB_DIRECTORY/$i" ]]; then
 			sed "/^#\|[[:space:]]#/d" "$LIB_DIRECTORY/$i" >> "$TMP_LIB"
-			LIB_GIT=$(grep "^#git <.*>$" "$LIB_DIRECTORY/$i" | cut -d ' ' -f2)
-			log::tab "$LIB_GIT"
-			echo "#lib $LIB_GIT" >> "$TMP_HEADER"
+			# if #git is found in the lib file, attach to TMP_HEADER
+			if LIB_GIT=$(grep "^#git <.*>$" "$LIB_DIRECTORY/$i" | cut -d ' ' -f2); then
+				log::tab "$LIB_GIT"
+				echo "#lib $LIB_GIT" >> "$TMP_HEADER"
+			fi
 		else
 			log::fail "$i not *.sh || $i not found"
 			exit 1
