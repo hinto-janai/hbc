@@ -85,7 +85,8 @@ fi
 # BOTH LIB/SRC NOT FOUND
 local EXISTS_LIB=true
 local SRC_FILES
-SRC_FILES=$(find src -regex ".*\.sh\|.*\.bash" 2>/dev/null | cut -d '/' -f2 | sort)
+local SRC_FILE_NAMES
+SRC_FILES=$(find src -regex ".*\.sh\|.*\.bash" 2>/dev/null | sort)
 if ! grep -m1 "^#include <.*>$" "$main" &>/dev/null; then
 	EXISTS_LIB=false
 	if [[ -z $SRC_FILES ]]; then
@@ -245,9 +246,9 @@ fi
 if [[ $SRC_FILES ]]; then
 	printf "${BCYAN}%s${OFF}\n" "compiling [src]"
 	for i in $SRC_FILES; do
-		log::tab "$i"
-		sed "/^#\|[[:space:]]#/d" "src/$i" >> "$TMP_SRC"
-		echo "#src <${i}>" >> "$TMP_HEADER"
+		log::tab "<${i/src\//}>"
+		sed "/^#\|[[:space:]]#/d" "$i" >> "$TMP_SRC"
+		echo "#src <${i/src\//}>" >> "$TMP_HEADER"
 	done
 fi
 
