@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-#git <hbc/ee7ab17>
-#nix <1657043095>
-#hbc <f87076b>
-#lib <stdlib/ask.sh/6cf3ad6>
-#lib <stdlib/log.sh/6cf3ad6>
-#lib <stdlib/trace.sh/6cf3ad6>
-#lib <stdlib/var.sh/6cf3ad6>
+#git <hbc/ed139bd>
+#nix <1657043993>
+#hbc <ed139bd>
+#lib <stdlib/ask.sh/cc3d85c>
+#lib <stdlib/log.sh/cc3d85c>
+#lib <stdlib/trace.sh/cc3d85c>
+#lib <stdlib/var.sh/cc3d85c>
 
 #-------------------------------------------------------------------------------- BEGIN LIB CODE
 POSIXLY_CORRECT=;\unset -f trap set unset declare exit printf read unalias;\unalias -a
@@ -345,7 +345,7 @@ local ENDOF_MAIN="#-------------------------------------------------------------
 
 # GIT HASH
 local DIRECTORY_GIT
-DIRECTORY_GIT=$(git rev-parse --short HEAD 2>/dev/null) || true
+DIRECTORY_GIT=$(git rev-parse --short HEAD 2>/dev/null) || unset DIRECTORY_GIT
 
 # HBC VERSION
 local VERSION_HBC
@@ -439,12 +439,18 @@ echo "#hbc <$VERSION_HBC>" >> "$TMP_HEADER"
 if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
 	printf "${BPURPLE}%s${OFF}\n" "compiling [lib] ******************"
 	local i
+	# include each found #include in TMP_LIB
 	for i in $(grep "^#include <.*>$" "$main" | cut -d ' ' -f2 | tr -d '<>' | sort); do
 		if [[ $i = *.sh && -f "$LIB_DIRECTORY/$i" ]]; then
 			sed "/^#\|[[:space:]]#/d" "$LIB_DIRECTORY/$i" >> "$TMP_LIB"
-			LIB_GIT=$(grep "^#git <.*>$" "$LIB_DIRECTORY/$i" | cut -d ' ' -f2)
-			log::tab "$LIB_GIT"
-			echo "#lib $LIB_GIT" >> "$TMP_HEADER"
+			# if #git is found in the lib file, attach to TMP_HEADER
+			if LIB_GIT=$(grep "^#git <.*>$" "$LIB_DIRECTORY/$i" | cut -d ' ' -f2); then
+				log::tab "$LIB_GIT"
+				echo "#lib $LIB_GIT" >> "$TMP_HEADER"
+			else
+				log::warn "<lib missing #git>"
+				echo "#lib <UNKNOWN>" >> "$TMP_HEADER"
+			fi
 		else
 			log::fail "$i not *.sh || $i not found"
 			exit 1

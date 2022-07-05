@@ -236,6 +236,9 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
 			if LIB_GIT=$(grep "^#git <.*>$" "$LIB_DIRECTORY/$i" | cut -d ' ' -f2); then
 				log::tab "$LIB_GIT"
 				echo "#lib $LIB_GIT" >> "$TMP_HEADER"
+			else
+				log::warn "<lib missing #git>"
+				echo "#lib <UNKNOWN>" >> "$TMP_HEADER"
 			fi
 		else
 			log::fail "$i not *.sh || $i not found"
