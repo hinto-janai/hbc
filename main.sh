@@ -14,7 +14,8 @@ if [[ $1 = "-h" || $1 = "--help" ]]; then
 cat << EOM
 USAGE: hbc [OPTION] [ARGUMENT]
     -d | --delete                       overwrite output file if it already exists
-    -i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: -i SC2154,SC2155
+    -i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: [-i SC2154,SC2155]
+    -l | --library <library directory>  specify where to look for lib code, default: [/usr/local/include]
     -m | --main    <main script name>   specify main script name, default: [main.sh]
     -h | --help                         print this help message and exit unsuccessfully
     -o | --output  <output name>        specify output filename, default: [\$FOLDER_NAME.sh]
@@ -39,6 +40,13 @@ case $1 in
 			exit 1
 		fi
 		local OPTION_IGNORE="$1"; shift;;
+	-l | --library)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --library"
+			exit 1
+		fi
+		local LIB_DIRECTORY="$1"; shift;;
 	-m | --main)
 		shift
 		if [[ -z $1 ]]; then
@@ -81,7 +89,7 @@ SRC_FILES=$(find src -regex ".*\.sh\|.*\.bash" 2>/dev/null | cut -d '/' -f2 | so
 if ! grep -m1 "^#include <.*>$" "$main" &>/dev/null; then
 	EXISTS_LIB=false
 	if [[ -z $SRC_FILES ]]; then
-		log::fail "both [lib/src] are missing" "no reason to use hbc" "exiting..."
+		log::fail "both [lib/src] are missing" "no reason to use hbc"
 		exit 1
 	fi
 fi
@@ -133,6 +141,7 @@ VERSION_HBC=$(grep -m1 "^#git <hbc/.*>$" "$0" | grep -o "\/.*>" | tr -d '/>')
 
 # LIB/SRC/MAIN
 local LIB_GIT
+[[ -z $LIB_DIRECTORY ]] && LIB_DIRECTORY="/usr/local/include"
 #local SRC_FILES # this gets defined in the beginning sanity check
 
 # MKTEMP
@@ -219,9 +228,9 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
 	printf "${BPURPLE}%s${OFF}\n" "compiling [lib] ******************"
 	local i
 	for i in $(grep "^#include <.*>$" "$main" | cut -d ' ' -f2 | tr -d '<>' | sort); do
-		if [[ $i = *.sh && -f /usr/local/include/$i ]]; then
-			sed "/^#\|[[:space:]]#/d" "/usr/local/include/$i" >> "$TMP_LIB"
-			LIB_GIT=$(grep "^#git <.*>$" "/usr/local/include/$i" | cut -d ' ' -f2)
+		if [[ $i = *.sh && -f "$LIB_DIRECTORY/$i" ]]; then
+			sed "/^#\|[[:space:]]#/d" "$LIB_DIRECTORY/$i" >> "$TMP_LIB"
+			LIB_GIT=$(grep "^#git <.*>$" "$LIB_DIRECTORY/$i" | cut -d ' ' -f2)
 			log::tab "$LIB_GIT"
 			echo "#lib $LIB_GIT" >> "$TMP_HEADER"
 		else
