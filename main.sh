@@ -77,7 +77,7 @@ fi
 # BOTH LIB/SRC NOT FOUND
 local EXISTS_LIB=true
 local SRC_FILES
-SRC_FILES=$(find src -name "*.sh" 2>/dev/null | cut -d '/' -f2 | sort)
+SRC_FILES=$(find src -regex ".*\.sh\|.*\.bash" 2>/dev/null | cut -d '/' -f2 | sort)
 if ! grep -m1 "^#include <.*>$" "$main" &>/dev/null; then
 	EXISTS_LIB=false
 	if [[ -z $SRC_FILES ]]; then
