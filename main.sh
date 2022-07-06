@@ -66,7 +66,9 @@ case $1 in
 			log::fail "hbc: no arg after --config"
 			exit 1
 		fi
-		CONFIG="$1"; shift;;
+		CONFIG="$1"
+		source "$CONFIG"
+		shift;;
 	-d | --delete) local OPTION_DELETE=true; shift;;
 	-i | --ignore)
 		shift
