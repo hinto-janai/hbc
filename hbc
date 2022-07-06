@@ -21,9 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/266c7c9>
-#nix <1657134986>
-#hbc <266c7c9>
+#git <hbc/dcfcab2>
+#nix <1657140817>
+#hbc <dcfcab2>
 #lib <stdlib/ask.sh/cc3d85c>
 #lib <stdlib/log.sh/cc3d85c>
 #lib <stdlib/trace.sh/cc3d85c>
@@ -42,17 +42,17 @@ set -eo pipefail || exit 95
 #-------------------------------------------------------------------------------- BEGIN LIB
 trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
 ask::yes() {
-	local ASK_FUNC_RESPONSE || return 44
-	read -r ASK_FUNC_RESPONSE
-	case $ASK_FUNC_RESPONSE in
+	local STD_ASK_REPONSE || return 44
+	read -r STD_ASK_REPONSE
+	case $STD_ASK_REPONSE in
 		""|y|Y|yes|Yes|YES) return 0 ;;
 		*) return 2 ;;
 	esac
 }
 ask::no() {
-	local ASK_FUNC_RESPONSE || return 44
-	read -r ASK_FUNC_RESPONSE
-	case $ASK_FUNC_RESPONSE in
+	local STD_ASK_RESPONSE || return 44
+	read -r STD_ASK_RESPONSE
+	case $STD_ASK_RESPONSE in
 		y|Y|yes|Yes|YES) return 2 ;;
 		*) return 0 ;;
 	esac
@@ -89,13 +89,13 @@ log::prog() {
 	printf "\r\033[1;37m[ \033[0m....\033[1;37m ]\033[0m %s " "$@"
 }
 log::debug() {
-	[[ $LOG_DEBUG_ENABLED != true ]] && return 0
+	[[ $STD_LOG_DEBUG != true ]] && return 0
 	printf "\r%${COLUMNS}s" " "
-	if [[ -z $LOG_DEBUG_INIT_TIME ]]; then
-		declare -g LOG_DEBUG_INIT_TIME
-		LOG_DEBUG_INIT_TIME=${EPOCHREALTIME//./}
+	if [[ -z $STD_LOG_DEBUG_INIT ]]; then
+		declare -g STD_LOG_DEBUG_INIT
+		STD_LOG_DEBUG_INIT=${EPOCHREALTIME//./}
 		printf "\r\033[1;90m%s\033[0m" "[debug 0.000000] "
-		if [[ $LOG_DEBUG_VERBOSE = true ]]; then
+		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
 			local f i
 			i=1
 			for f in ${BASH_LINENO[@]}; do
@@ -107,19 +107,19 @@ log::debug() {
 		printf "| %s\n" "$@"
 		return
 	fi
-	local LOG_DEBUG_ADJUSTED_TIME LOG_DEBUG_DOT_INSERTION
-	LOG_DEBUG_ADJUSTED_TIME=$((${EPOCHREALTIME//./}-LOG_DEBUG_INIT_TIME))
-	case ${#LOG_DEBUG_ADJUSTED_TIME} in
-		1) LOG_DEBUG_ADJUSTED_TIME=00000${LOG_DEBUG_ADJUSTED_TIME};;
-		2) LOG_DEBUG_ADJUSTED_TIME=0000${LOG_DEBUG_ADJUSTED_TIME};;
-		3) LOG_DEBUG_ADJUSTED_TIME=000${LOG_DEBUG_ADJUSTED_TIME};;
-		4) LOG_DEBUG_ADJUSTED_TIME=00${LOG_DEBUG_ADJUSTED_TIME};;
-		5) LOG_DEBUG_ADJUSTED_TIME=0${LOG_DEBUG_ADJUSTED_TIME};;
+	local STD_LOG_DEBUG_ADJUSTED STD_LOG_DEBUG_DOT
+	STD_LOG_DEBUG_ADJUSTED=$((${EPOCHREALTIME//./}-LOG_DEBUG_INIT))
+	case ${#STD_LOG_DEBUG_ADJUSTED} in
+		1) STD_LOG_DEBUG_ADJUSTED=00000${STD_LOG_DEBUG_ADJUSTED};;
+		2) STD_LOG_DEBUG_ADJUSTED=0000${STD_LOG_DEBUG_ADJUSTED};;
+		3) STD_LOG_DEBUG_ADJUSTED=000${STD_LOG_DEBUG_ADJUSTED};;
+		4) STD_LOG_DEBUG_ADJUSTED=00${STD_LOG_DEBUG_ADJUSTED};;
+		5) STD_LOG_DEBUG_ADJUSTED=0${STD_LOG_DEBUG_ADJUSTED};;
 	esac
-	LOG_DEBUG_DOT_INSERTION=$((${#LOG_DEBUG_ADJUSTED_TIME}-6))
-	if [[ $LOG_DEBUG_DOT_INSERTION -eq 0 ]]; then
-		printf "\r\033[1;90m%s\033[0m" "[debug 0.${LOG_DEBUG_ADJUSTED_TIME}] "
-		if [[ $LOG_DEBUG_VERBOSE = true ]]; then
+	STD_LOG_DEBUG_DOT=$((${#STD_LOG_DEBUG_ADJUSTED}-6))
+	if [[ $STD_LOG_DEBUG_DOT -eq 0 ]]; then
+		printf "\r\033[1;90m%s\033[0m" "[debug 0.${STD_LOG_DEBUG_ADJUSTED}] "
+		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
 			local f i
 			i=1
 			for f in ${BASH_LINENO[@]}; do
@@ -130,8 +130,8 @@ log::debug() {
 		fi
 		printf "| %s\n" "$@"
 	else
-		printf "\r\033[1;90m%s\033[0m" "[debug ${LOG_DEBUG_ADJUSTED_TIME:0:${LOG_DEBUG_DOT_INSERTION}}.${LOG_DEBUG_ADJUSTED_TIME:${LOG_DEBUG_DOT_INSERTION}}] "
-		if [[ $LOG_DEBUG_VERBOSE = true ]]; then
+		printf "\r\033[1;90m%s\033[0m" "[debug ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] "
+		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
 			local f i
 			i=1
 			for f in ${BASH_LINENO[@]}; do
@@ -148,8 +148,8 @@ ___BEGIN___ERROR___TRACE___() {
 	\unset -f trap set return exit printf unset local return read unalias mapfile kill builtin || exit 9
 	\unalias -a || exit 10
 	unset POSIXLY_CORRECT || exit 11
-	trap 'TRACE_CMD="$BASH_COMMAND" TRACE_FUNC=(${BASH_LINENO[@]}) TRACE_CMD_NUM="$LINENO" TRACE_PIPE=(${PIPESTATUS[@]}); ___ENDOF___ERROR___TRACE___ || exit 100' ERR || exit 12
-	unset -v TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_PIPE || exit 13
+	trap 'STD_TRACE_CMD="$BASH_COMMAND" STD_TRACE_FUNC=(${BASH_LINENO[@]}) STD_TRACE_CMD_NUM="$LINENO" STD_TRACE_PIPE=(${PIPESTATUS[@]}); ___ENDOF___ERROR___TRACE___ || exit 100' ERR || exit 12
+	unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 13
 	set -E -e -o pipefail || exit 14
 	return 0
 }
@@ -163,7 +163,7 @@ ___ENDOF___ERROR___TRACE___() {
 		\unset -f trap set return exit return || exit 20
 		\unalias -a || exit 21
 		unset POSIXLY_CORRECT || exit 22
-		unset -v TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_PIPE || exit 23
+		unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 23
 		set +E +eo pipefail || exit 24
 		trap - ERR || exit 25
 		return 0
@@ -171,52 +171,52 @@ ___ENDOF___ERROR___TRACE___() {
 	printf "\033[1;91m%s\n" "========  BEGIN ERROR TRACE  ========"
 	printf "\033[1;95m%s\033[0m%s\n" "[bash] " "$BASH_VERSION"
 	printf "\033[1;96m%s\033[0m%s\n" "[unix] " "$EPOCHSECONDS"
-	printf "\033[1;91m%s\033[0m%s\n" "[code] " "${TRACE_PIPE[@]}"
+	printf "\033[1;91m%s\033[0m%s\n" "[code] " "${STD_TRACE_PIPE[@]}"
 	printf "\033[1;97m%s\033[0m%s\n" "[file] " "${BASH_SOURCE[-1]}"
 	printf "\033[1;94m%s\033[0m%s\n" "[ wd ] " "$PWD"
-	printf "\033[1;93m%s\033[0m%s\n" "[ \$_ ] " "${TRACE_CMD_NUM}: $TRACE_CMD"
+	printf "\033[1;93m%s\033[0m%s\n" "[ \$_ ] " "${STD_TRACE_CMD_NUM}: $STD_TRACE_CMD"
 	local f
 	local i=1
-	for f in ${TRACE_FUNC[@]}; do
+	for f in ${STD_TRACE_FUNC[@]}; do
 		[[ $f = 0 ]] && break
 		printf "\033[1;92m%s\033[0m%s\n" "[func] " "${f}: ${FUNCNAME[${i}]}()"
 		((i++))
 	done
-	local TRACE_LINE_ARRAY
-	local ORIGINAL_LINE="$TRACE_CMD_NUM"
-	if [[ $TRACE_CMD_NUM -lt 5 ]]; then
-		local TRACE_CMD_NUM=1
-		mapfile -n 9 TRACE_LINE_ARRAY < $0
+	local STD_TRACE_LINE_ARRAY
+	local STD_ORIGINAL_LINE="$STD_TRACE_CMD_NUM"
+	if [[ $STD_TRACE_CMD_NUM -lt 5 ]]; then
+		local STD_TRACE_CMD_NUM=1
+		mapfile -n 9 STD_TRACE_LINE_ARRAY < $0
 	else
-		local TRACE_CMD_NUM=$((TRACE_CMD_NUM-4))
-		mapfile -s $((TRACE_CMD_NUM-1)) -n 9 TRACE_LINE_ARRAY < $0
+		local STD_TRACE_CMD_NUM=$((STD_TRACE_CMD_NUM-4))
+		mapfile -s $((STD_TRACE_CMD_NUM-1)) -n 9 STD_TRACE_LINE_ARRAY < $0
 	fi
 	for i in {0..8}; do
-		[[ ${TRACE_LINE_ARRAY[$i]} ]] || break
-		if [[ $TRACE_CMD_NUM = "$ORIGINAL_LINE" ]]; then
-			case ${#TRACE_CMD_NUM} in
-				1) printf "\033[1;97m%s" "     $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				2) printf "\033[1;97m%s" "    $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				3) printf "\033[1;97m%s" "   $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				4) printf "\033[1;97m%s" "  $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				5) printf "\033[1;97m%s" " $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				*) printf "\033[1;97m%s" "$TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
+		[[ ${STD_TRACE_LINE_ARRAY[$i]} ]] || break
+		if [[ $STD_TRACE_CMD_NUM = "$STD_ORIGINAL_LINE" ]]; then
+			case ${#STD_TRACE_CMD_NUM} in
+				1) printf "\033[1;97m%s" "     $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				2) printf "\033[1;97m%s" "    $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				3) printf "\033[1;97m%s" "   $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				4) printf "\033[1;97m%s" "  $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				5) printf "\033[1;97m%s" " $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				*) printf "\033[1;97m%s" "$STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
 			esac
 		else
-			case ${#TRACE_CMD_NUM} in
-				1) printf "\033[1;90m%s" "     $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				2) printf "\033[1;90m%s" "    $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				3) printf "\033[1;90m%s" "   $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				4) printf "\033[1;90m%s" "  $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				5) printf "\033[1;90m%s" " $TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
-				*) printf "\033[1;90m%s" "$TRACE_CMD_NUM ${TRACE_LINE_ARRAY[${i}]}" ;;
+			case ${#STD_TRACE_CMD_NUM} in
+				1) printf "\033[1;90m%s" "     $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				2) printf "\033[1;90m%s" "    $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				3) printf "\033[1;90m%s" "   $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				4) printf "\033[1;90m%s" "  $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				5) printf "\033[1;90m%s" " $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
+				*) printf "\033[1;90m%s" "$STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]}" ;;
 			esac
 		fi
-		((TRACE_CMD_NUM++))
+		((STD_TRACE_CMD_NUM++))
 	done
 	printf "\033[1;91m%s\033[0m\n" "========  ENDOF ERROR TRACE  ========"
-	[[ $TRACE_CMD =~ ^\(.*\)$ ]] && printf "\033[1;93m%s\033[0m\n" "========  SUB-SHELLS KILLED  ========"
-	unset -v TRACE_CMD TRACE_FUNC_NUM TRACE_CMD_NUM TRACE_PIPE || exit 26
+	[[ $STD_TRACE_CMD =~ ^\(.*\)$ ]] && printf "\033[1;93m%s\033[0m\n" "========  SUB-SHELLS KILLED  ========"
+	unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 26
 	set +E +eo pipefail || exit 27
 	trap - ERR || exit 28
 	builtin kill -s SIGKILL $$
@@ -308,18 +308,44 @@ elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 	exit 3
 fi
 
-# HBC CONFIG BEFORE FLAGS
-if [[ -r "$PWD/hbc.conf" ]]; then
-	log::info "config: $PWD/hbc.conf"
+# SOURCE CONFIG BEFORE OPTIONS
+local i CONFIG_FLAG_SET
+for i in $@ " "; do
+	if [[ $i = "-c" || $i = "--config" ]]; then
+		CONFIG_FLAG_SET=true
+	elif [[ $CONFIG_FLAG_SET ]]; then
+		local CONFIG="$i"
+		if [[ -z $CONFIG || $CONFIG = " " ]]; then
+			log::fail "hbc: no arg after --config"
+			exit 1
+		fi
+		if source "$CONFIG"; then
+			log::info "config: $CONFIG"
+			break
+		else
+			log::fail "config: $CONFIG"
+			exit 1
+		fi
+	fi
+done
+
+# IF NO --CONFIG, HBC DEFAULT CONFIG
+if [[ -r "$PWD/hbc.conf" && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="$PWD/hbc.conf"
-	source "$CONFIG"
-elif [[ -r /etc/hbc.conf ]]; then
-	log::info "config: /etc/hbc.conf"
+	if source "$CONFIG" &>/dev/null; then
+		log::info "config: $CONFIG"
+	else
+		log::warn "config: $CONFIG not found"
+	fi
+elif [[ -r /etc/hbc.conf && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="/etc/hbc.conf"
-	source "$CONFIG"
-else
-	log::warn "config: not found"
+	if source "$CONFIG" &>/dev/null; then
+		log::info "config: $CONFIG"
+	else
+		log::warn "config: $CONFIG not found"
+	fi
 fi
+
 # PARSE ARGS
 while [[ $# != 0 ]]; do
 # SHORT+LONG OPTIONS (overwrites config)
@@ -331,13 +357,7 @@ case $1 in
 			exit 1
 		fi
 		COPYRIGHT="$1"; shift;;
-	-c | --config)
-		shift
-		if [[ -z $1 ]]; then
-			log::fail "hbc: no arg after --config"
-			exit 1
-		fi
-		CONFIG="$1"; shift;;
+	-c | --config) shift; shift;;
 	-d | --delete) local OPTION_DELETE=true; shift;;
 	-i | --ignore)
 		shift
@@ -755,7 +775,9 @@ log::info "700 permissions"
 chmod 700 "${OUTPUT}"
 
 # SHELLCHECK
-if [[ $OPTION_IGNORE != *ALL* ]]; then
+if [[ $OPTION_IGNORE != *ALL* || $OPTION_IGNORE != *all* ]]; then
+	log::info "skipping shellcheck"
+else
 	log::info "starting shellcheck"
 	if [[ $OPTION_QUIET = true ]]; then
 		if [[ $OPTION_IGNORE ]]; then

@@ -37,18 +37,47 @@ elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 	exit 3
 fi
 
-# HBC CONFIG BEFORE FLAGS
-if [[ -r "$PWD/hbc.conf" ]]; then
-	log::info "config: $PWD/hbc.conf"
+# UNSET ENVIRONMENT
+unset -v COPYRIGHT OPTION_DELETE OPTION_IGNORE LIB_DIRECTORY MAIN OUTPUT OPTION_QUIET OPTION_RUN SOURCE OPTION_TEST
+
+# SOURCE CONFIG BEFORE OPTIONS
+local i CONFIG_FLAG_SET
+for i in $@ " "; do
+	if [[ $i = "-c" || $i = "--config" ]]; then
+		CONFIG_FLAG_SET=true
+	elif [[ $CONFIG_FLAG_SET ]]; then
+		local CONFIG="$i"
+		if [[ -z $CONFIG || $CONFIG = " " ]]; then
+			log::fail "hbc: no arg after --config"
+			exit 1
+		fi
+		if source "$CONFIG"; then
+			log::info "config: $CONFIG"
+			break
+		else
+			log::fail "config: $CONFIG"
+			exit 1
+		fi
+	fi
+done
+
+# IF NO --CONFIG, HBC DEFAULT CONFIG
+if [[ -r "$PWD/hbc.conf" && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="$PWD/hbc.conf"
-	source "$CONFIG"
-elif [[ -r /etc/hbc.conf ]]; then
-	log::info "config: /etc/hbc.conf"
+	if source "$CONFIG" &>/dev/null; then
+		log::info "config: $CONFIG"
+	else
+		log::warn "config: $CONFIG not found"
+	fi
+elif [[ -r /etc/hbc.conf && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="/etc/hbc.conf"
-	source "$CONFIG"
-else
-	log::warn "config: not found"
+	if source "$CONFIG" &>/dev/null; then
+		log::info "config: $CONFIG"
+	else
+		log::warn "config: $CONFIG not found"
+	fi
 fi
+
 # PARSE ARGS
 while [[ $# != 0 ]]; do
 # SHORT+LONG OPTIONS (overwrites config)
@@ -60,15 +89,7 @@ case $1 in
 			exit 1
 		fi
 		COPYRIGHT="$1"; shift;;
-	-c | --config)
-		shift
-		if [[ -z $1 ]]; then
-			log::fail "hbc: no arg after --config"
-			exit 1
-		fi
-		CONFIG="$1"
-		source "$CONFIG"
-		shift;;
+	-c | --config) shift; shift;;
 	-d | --delete) local OPTION_DELETE=true; shift;;
 	-i | --ignore)
 		shift
@@ -486,7 +507,9 @@ log::info "700 permissions"
 chmod 700 "${OUTPUT}"
 
 # SHELLCHECK
-if [[ $OPTION_IGNORE != *ALL* ]]; then
+if [[ $OPTION_IGNORE != *ALL* || $OPTION_IGNORE != *all* ]]; then
+	log::info "skipping shellcheck"
+else
 	log::info "starting shellcheck"
 	if [[ $OPTION_QUIET = true ]]; then
 		if [[ $OPTION_IGNORE ]]; then
