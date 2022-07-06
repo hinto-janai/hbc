@@ -1,0 +1,57 @@
+## ================= ##
+##                   ##
+## hbc configuration ##
+##                   ##
+## ================= ##
+
+## -a | --add
+## add a text file (like copyright) on top of output, default: [COPYRIGHT]
+## usage: <FILE_PATH>
+COPYRIGHT=
+
+## -d | --delete
+## overwrite output file if it already exists
+## usage: <true> || <false>
+OPTION_DELETE=
+
+## -i | --ignore
+## ignore shellcheck codes, formatting: [-i SC2154,SC2155]
+## usage: SC2162,SC2162,[more_codes] || <ALL>
+##        <ALL> will disable shellcheck
+##        if you supply codes with "--ignore" and a config, hbc will use both
+OPTION_IGNORE=
+
+## -l | --library
+## specify where to look for lib code, default: [/usr/local/include]
+## usage: <LIBRARY_DIRECTORY_PATH>
+LIB_DIRECTORY=
+
+# -m | --main
+## specify main script name, default: [main.sh]
+## usage: <MAIN_SCRIPT_PATH>
+MAIN=
+
+## -o | --output
+## specify output filename, default: [\$FOLDER_NAME.sh]
+## usage: <OUTPUT_NAME>
+OUTPUT=
+
+## -q | --quiet
+## suppress hbc compile-time output (exit codes stay)
+## usage: <true> || <false>
+OPTION_QUIET=
+
+## -r | --run
+## run output file if hbc successfully compiles
+## usage: <true> || <false>
+OPTION_RUN=
+
+## -s | --source
+## specify where to look for src code, default: [src]
+## usage: <SOURCE_DIRECTORY_PATH>
+SOURCE=
+
+## -t | --test
+## --run & --quiet the output from memory, no file made
+## usage: <true> || <false>
+OPTION_TEST=

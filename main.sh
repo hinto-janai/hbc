@@ -6,32 +6,61 @@
 hbc() {
 #-------------------------------------------------------------------------------- HBC OPTIONS
 ___BEGIN___ERROR___TRACE___
-unset -v main OUTPUT
-# PARSE ARGS
-while [[ $# != 0 ]]; do
 # HELP OPTION
-if [[ $1 = "-h" || $1 = "--help" ]]; then
+if [[ $* = *"-h"* || $* = *"--help"* ]]; then
 cat << EOM
 USAGE: hbc [OPTION] [ARGUMENT]
+    -a | --add     <text file>          add a text file (like copyright) on top of output, default: [COPYRIGHT]
+    -c | --config  <hbc config file>    specify hbc config to use, default: [\$PWD/hbc.conf] or [/etc/hbc.conf]
     -d | --delete                       overwrite output file if it already exists
-    -i | --ignore  <shellcheck codes>   ignore shellcheck codes, formatting: [-i SC2154,SC2155]
+    -i | --ignore  <codes> or <ALL>     ignore shellcheck codes or disable shellcheck: [-i SC2154,SC2155] or [-i ALL]
     -l | --library <library directory>  specify where to look for lib code, default: [/usr/local/include]
     -m | --main    <main script name>   specify main script name, default: [main.sh]
     -h | --help                         print this help message and exit unsuccessfully
     -o | --output  <output name>        specify output filename, default: [\$FOLDER_NAME.sh]
     -q | --quiet                        suppress hbc compile-time output (exit codes stay)
     -r | --run                          run output file if hbc successfully compiles
+    -s | --source  <source directory>   specify where to look for src code, default: [src]
     -t | --test                         --run & --quiet the output from memory, no file made
     -v | --version                      print this hbc's time of compile and exit unsuccessfully
 EOM
 exit 2
 # VERSION OPTION
-elif [[ $1 = "-v" || $1 = "--version" ]]; then
+elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 	date -d @"$(grep -m1 "#nix <.*>$" "$0" | tr -d '#nix<> ')"
 	exit 3
 fi
-# SHORT+LONG OPTIONS
+
+# HBC CONFIG BEFORE FLAGS
+if [[ -r "$PWD/hbc.conf" ]]; then
+	log::info "config: $PWD/hbc.conf"
+	local CONFIG="$PWD/hbc.conf"
+	source "$CONFIG"
+elif [[ -r /etc/hbc.conf ]]; then
+	log::info "config: /etc/hbc.conf"
+	local CONFIG="/etc/hbc.conf"
+	source "$CONFIG"
+else
+	log::warn "config: not found"
+fi
+# PARSE ARGS
+while [[ $# != 0 ]]; do
+# SHORT+LONG OPTIONS (overwrites config)
 case $1 in
+	-a | --add)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --add"
+			exit 1
+		fi
+		COPYRIGHT="$1"; shift;;
+	-c | --config)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --config"
+			exit 1
+		fi
+		CONFIG="$1"; shift;;
 	-d | --delete) local OPTION_DELETE=true; shift;;
 	-i | --ignore)
 		shift
@@ -39,7 +68,7 @@ case $1 in
 			log::fail "hbc: no arg after --ignore"
 			exit 1
 		fi
-		local OPTION_IGNORE="$1"; shift;;
+		local OPTION_IGNORE="${OPTION_IGNORE},$1"; shift;;
 	-l | --library)
 		shift
 		if [[ -z $1 ]]; then
@@ -53,7 +82,7 @@ case $1 in
 			log::fail "hbc: no arg after --main"
 			exit 1
 		fi
-		local main="$1"; shift;;
+		local MAIN="$1"; shift;;
 	-o | --output)
 		shift
 		if [[ -z $1 ]]; then
@@ -61,33 +90,56 @@ case $1 in
 			exit 1
 		fi
 		OUTPUT="$1"; shift;;
-	-r | --run) OPTION_RUN=true; shift;;
-	-t | --test) OPTION_RUN=true; OPTION_QUIET=true; OPTION_TEST=true; shift;;
 	-q | --quiet) OPTION_QUIET=true; shift;;
+	-r | --run) OPTION_RUN=true; shift;;
+	-s | --source)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --source"
+			exit 1
+		fi
+		SOURCE="$1"; shift;;
+	-t | --test) OPTION_TEST=true; shift;;
 	*) log::fail "hbc: invalid option: $1"; exit 1;;
 esac
 done
+# to make the config test work
+[[ $OPTION_TEST = true ]] && OPTION_RUN=true OPTION_QUIET=true
 ___ENDOF___ERROR___TRACE___
 
 #-------------------------------------------------------------------------------- SANITY CHECKS
-# NO SRC DIR
-if [[ ! -d src && $OPTION_QUIET != true ]]; then
-	log::warn "no src directory found"
+# COPYRIGHT
+[[ -z $COPYRIGHT ]] && local COPYRIGHT="COPYRIGHT"
+if [[ -r $COPYRIGHT ]]; then
+	log::info "copyright: $COPYRIGHT"
+else
+	log::warn "copyright: $COPYRIGHT not found"
+	unset -v COPYRIGHT
+fi
+
+# SRC DIR
+[[ -z $SOURCE ]] && local SOURCE="src"
+if [[ ! -d $SOURCE && $OPTION_QUIET != true ]]; then
+	log::warn "src: $SOURCE not found"
+else
+	log::info "src: $SOURCE"
 fi
 
 # MAIN SCRIPT
-[[ -z $main ]] && local main="main.sh"
-if [[ ! -e $main ]]; then
-	log::fail "hbc: $main not found"
+[[ -z $MAIN ]] && local MAIN="main.sh"
+if [[ ! -r $MAIN && $OPTION_QUIET != true ]]; then
+	log::fail "main: $MAIN not found"
 	exit 1
+else
+	log::info "main: $MAIN"
 fi
 
 # BOTH LIB/SRC NOT FOUND
 local EXISTS_LIB=true
 local SRC_FILES
 local SRC_FILE_NAMES
-SRC_FILES=$(find src -regex ".*\.sh\|.*\.bash" 2>/dev/null | sort)
-if ! grep -m1 "^#include <.*>$" "$main" &>/dev/null; then
+SRC_FILES=$(find $SOURCE -regex ".*\.sh\|.*\.bash" 2>/dev/null | sort)
+if ! grep -m1 "^#include <.*>$" "$MAIN" &>/dev/null; then
 	EXISTS_LIB=false
 	if [[ -z $SRC_FILES ]]; then
 		log::fail "both [lib/src] are missing" "no reason to use hbc"
@@ -105,8 +157,8 @@ elif [[ -z $OUTPUT ]]; then
 fi
 
 # IF MAIN/OUT ARE WEIRD CHARACTERS
-if [[ $main != [A-Za-z0-9_/~$]* ]]; then
-	log::fail "hbc: \$main contains weird characters; only [A-Za-z0-9_/~$] is supported"
+if [[ $MAIN != [A-Za-z0-9_/~$]* ]]; then
+	log::fail "hbc: \$MAIN contains weird characters; only [A-Za-z0-9_/~$] is supported"
 	exit 1
 elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
 	log::fail "hbc: \$OUTPUT contains weird characters; only [A-Za-z0-9_/~$] is supported"
@@ -127,10 +179,11 @@ fi
 ___BEGIN___ERROR___TRACE___
 
 # HEADERS
-local HEADER_LIB="#-------------------------------------------------------------------------------- BEGIN LIB CODE"
-local HEADER_SRC="#-------------------------------------------------------------------------------- BEGIN SRC CODE"
-local HEADER_MAIN="#-------------------------------------------------------------------------------- BEGIN MAIN SCRIPT"
-local ENDOF_MAIN="#-------------------------------------------------------------------------------- ENDOF MAIN SCRIPT"
+local HEADER_SAFETY="#-------------------------------------------------------------------------------- BEGIN SAFETY"
+local HEADER_LIB="#-------------------------------------------------------------------------------- BEGIN LIB"
+local HEADER_SRC="#-------------------------------------------------------------------------------- BEGIN SRC"
+local HEADER_MAIN="#-------------------------------------------------------------------------------- BEGIN MAIN"
+local ENDOF_MAIN="#-------------------------------------------------------------------------------- ENDOF MAIN"
 
 # GIT HASH
 local DIRECTORY_GIT
@@ -148,6 +201,7 @@ local LIB_GIT
 # MKTEMP
 declare -g TMP_DIR
 local TMP_HEADER
+local TMP_SAFETY
 local TMP_LIB
 local TMP_SRC
 local TMP_SCRATCH
@@ -163,6 +217,7 @@ if EXISTS_TMP=$(find /tmp/hbc.* -type d 2>/dev/null); then
 fi
 TMP_DIR="$(mktemp -d /tmp/hbc.XXXXXXXXXX)"
 TMP_HEADER="$(mktemp "$TMP_DIR"/header.XXXXXXXXX)"
+TMP_SAFETY="$(mktemp "$TMP_DIR"/safety.XXXXXXXXX)"
 TMP_LIB="$(mktemp "$TMP_DIR"/lib.XXXXXXX)"
 TMP_SRC="$(mktemp "$TMP_DIR"/src.XXXXXXX)"
 TMP_SCRATCH="$(mktemp "$TMP_DIR"/scratch.XXXXXXXXXX)"
@@ -174,22 +229,31 @@ if [[ $OPTION_TEST = true ]]; then
 fi
 
 # SAFETY HEADERS
-local SAFETY_LIB
-SAFETY_LIB=$(cat << 'EOM'
-POSIXLY_CORRECT=;\unset -f trap set unset declare exit printf read unalias;\unalias -a
-set -eo pipefail || exit 111
-trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
-unset POSIXLY_CORRECT || exit 113
+# safety
+local SAFETY_HEADER
+SAFETY_HEADER=$(cat << 'EOM'
+POSIXLY_CORRECT= || exit 90
+	# bash builtins
+\unset -f . : [ alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
+	# gnu core-utils
+\unset -f arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 92
+\unalias -a || exit 93
+unset POSIXLY_CORRECT || exit 94
+set -eo pipefail || exit 95
 EOM
 )
+# lib
+SAFETY_LIB=$(cat << 'EOM'
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
+EOM
+)
+# src
 local SAFETY_SRC
 SAFETY_SRC=$(cat << 'EOM'
-POSIXLY_CORRECT=;\unset -f trap set unset declare exit printf read unalias;\unalias -a
-set -eo pipefail || exit 114
 trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 115' ERR || exit 115
-unset POSIXLY_CORRECT || exit 116
 EOM
 )
+# safety end
 local SAFETY_END
 SAFETY_END=$(cat << 'EOM'
 trap - ERR || exit 117
@@ -202,6 +266,13 @@ printf "${BBLUE}%s${OFF}\n" "compiling [header] ***************"
 # BASH SHEBANG
 log::tab "#!/usr/bin/env bash"
 echo "#!/usr/bin/env bash" > "$TMP_HEADER"
+
+# COPYRIGHT
+if [[ $COPYRIGHT ]]; then
+	log::tab "copyright: $COPYRIGHT"
+	cat "$COPYRIGHT" >> "$TMP_HEADER"
+	echo  >> "$TMP_HEADER"
+fi
 
 # GIT HASH
 if [[ $DIRECTORY_GIT ]]; then
@@ -223,13 +294,18 @@ echo "#nix <$EPOCHSECONDS>" >> "$TMP_HEADER"
 log::tab "hbc: $VERSION_HBC"
 echo "#hbc <$VERSION_HBC>" >> "$TMP_HEADER"
 
+#-------------------------------------------------------------------------------- SAFETY
+printf "${BRED}%s${OFF}\n" "creating [safety] ****************"
+log::tab "<safety>"
+echo "$SAFETY_HEADER" >> "$TMP_SAFETY"
+
 #-------------------------------------------------------------------------------- LIB
 # LIB LOOP
-if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
+if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib || $DIRECTORY_NAME != lib* ]]; then
 	printf "${BPURPLE}%s${OFF}\n" "compiling [lib] ******************"
 	local i
 	# include each found #include in TMP_LIB
-	for i in $(grep "^#include <.*>$" "$main" | cut -d ' ' -f2 | tr -d '<>' | sort); do
+	for i in $(grep "^#include <.*>$" "$MAIN" | cut -d ' ' -f2 | tr -d '<>' | sort); do
 		if [[ $i = *.sh && -f "$LIB_DIRECTORY/$i" ]]; then
 			sed "/^#\|^[[:space:]]#/d" "$LIB_DIRECTORY/$i" >> "$TMP_LIB"
 			# if #git is found in the lib file, attach to TMP_HEADER
@@ -263,7 +339,8 @@ printf "${BYELLOW}%s${OFF}\n" "cleaning *************************"
 
 # SCRATCH (ref for grep to remove lines)
 log::tab "creating scratch"
-echo "$SAFETY_LIB" > "$TMP_SCRATCH"
+echo "$SAFETY_HEADER" > "$TMP_SCRATCH"
+echo "$SAFETY_LIB" >> "$TMP_SCRATCH"
 echo "$SAFETY_SRC" >> "$TMP_SCRATCH"
 echo "$SAFETY_END" >> "$TMP_SCRATCH"
 
@@ -307,20 +384,27 @@ printf "${BGREEN}%s${OFF}\n" "linking  *************************"
 
 # HEADER
 printf "%s" "" > "$OUTPUT"
-log::tab "[header] -------> line $(wc -l "$OUTPUT" | cut -f1 -d ' ')"
+log::tab "[header] ---------> line $(wc -l "$OUTPUT" | cut -f1 -d ' ')"
 cat "$TMP_HEADER" > "$OUTPUT"
+
+# SAFETY
+echo >> "$OUTPUT"
+log::tab "[safety::header] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+echo "$HEADER_SAFETY" >> "$OUTPUT"
+log::tab "[safety] ---------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+cat "$TMP_SAFETY" >> "$OUTPUT"
 
 # LIB
 if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
 	echo >> "$OUTPUT"
-	log::tab "[lib::header] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[lib::header] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$HEADER_LIB" >> "$OUTPUT"
-	log::tab "[lib::safety] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[lib::safety] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$SAFETY_LIB" >> "$OUTPUT"
-	log::tab "[lib] ----------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[lib] ------------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	cat "$TMP_LIB" >> "$OUTPUT"
 	# DECLARE -FR
-	log::tab "[lib::declare] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[lib::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	local FUNCTIONS_LIB
 	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
 		if [[ -z ${FUNCTIONS_LIB[0]} ]]; then
@@ -337,17 +421,17 @@ fi
 # SRC
 if [[ $SRC_FILES ]]; then
 	echo >> "$OUTPUT"
-	log::tab "[src::header] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[src::header] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$HEADER_SRC" >> "$OUTPUT"
 	if [[ $DIRECTORY_NAME != *lib ]]; then
-		log::tab "[src::safety] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+		log::tab "[src::safety] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 		echo "$SAFETY_SRC" >> "$OUTPUT"
 	fi
-	log::tab "[src] ----------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[src] ------------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	cat "$TMP_SRC" >> "$OUTPUT"
 	# DECLARE -FR
 	if [[ $DIRECTORY_NAME != *lib ]]; then
-		log::tab "[src::declare] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+		log::tab "[src::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 		local FUNCTIONS_SRC
 		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
 			if [[ -z ${FUNCTIONS_SRC[0]} ]]; then
@@ -364,20 +448,20 @@ fi
 
 # SAFETY END
 if [[ $DIRECTORY_NAME != *lib ]]; then
-	log::tab "[safety::end] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[safety::end] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$SAFETY_END" >> "$OUTPUT"
 fi
 
 # MAIN
 local EXISTS_MAIN
-EXISTS_MAIN=$(sed -e "/^#include <.*>$/d" -e '/./,$!d' "$main")
+EXISTS_MAIN=$(sed -e "/^#include <.*>$/d" -e '/./,$!d' "$MAIN")
 if [[ $EXISTS_MAIN ]]; then
 	echo >> "$OUTPUT"
-	log::tab "[main::header] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[main::header] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$HEADER_MAIN" >> "$OUTPUT"
-	log::tab "[main] ---------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[main] -----------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$EXISTS_MAIN" >> "$OUTPUT"
-	log::tab "[main::endof] --> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	log::tab "[main::endof] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$ENDOF_MAIN" >> "$OUTPUT"
 fi
 
@@ -390,11 +474,21 @@ log::info "700 permissions"
 chmod 700 "${OUTPUT}"
 
 # SHELLCHECK
-log::info "starting shellcheck"
-if [[ $OPTION_QUIET = true ]]; then
-	shellcheck "${OUTPUT}" --shell bash -e SC2274,SC2068,SC2128,SC2086,SC1036,SC1088,SC2153,SC2034,SC2155,SC2207,SC2119,SC2120,SC2044,SC2035,SC2129,${OPTION_IGNORE} >&3
-else
-	shellcheck "${OUTPUT}" --shell bash -e SC2274,SC2068,SC2128,SC2086,SC1036,SC1088,SC2153,SC2034,SC2155,SC2207,SC2119,SC2120,SC2044,SC2035,SC2129,${OPTION_IGNORE}
+if [[ $OPTION_IGNORE != *ALL* ]]; then
+	log::info "starting shellcheck"
+	if [[ $OPTION_QUIET = true ]]; then
+		if [[ $OPTION_IGNORE ]]; then
+			shellcheck "${OUTPUT}" --shell bash -e "$OPTION_IGNORE" >&3
+		else
+			shellcheck "${OUTPUT}" --shell bash >&3
+		fi
+	else
+		if [[ $OPTION_IGNORE ]]; then
+			shellcheck "${OUTPUT}" --shell bash -e "$OPTION_IGNORE"
+		else
+			shellcheck "${OUTPUT}" --shell bash
+		fi
+	fi
 fi
 
 # DELETE TMP_DIR
