@@ -38,7 +38,7 @@ elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 fi
 
 # UNSET ENVIRONMENT
-unset -v COPYRIGHT DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+unset -v CONFIG COPYRIGHT DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
 
 # SOURCE CONFIG BEFORE OPTIONS
 local i CONFIG_FLAG_SET
@@ -52,7 +52,6 @@ for i in $@ " "; do
 			exit 1
 		fi
 		if source "$CONFIG"; then
-			log::info "config: $CONFIG"
 			break
 		else
 			log::fail "config: $CONFIG"
@@ -64,16 +63,12 @@ done
 # IF NO --CONFIG, HBC DEFAULT CONFIG
 if [[ -r "$PWD/hbc.conf" && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="$PWD/hbc.conf"
-	if source "$CONFIG" &>/dev/null; then
-		log::info "config: $CONFIG"
-	else
+	if ! source "$CONFIG" &>/dev/null; then
 		log::warn "config: $CONFIG not found"
 	fi
 elif [[ -r /etc/hbc.conf && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="/etc/hbc.conf"
-	if source "$CONFIG" &>/dev/null; then
-		log::info "config: $CONFIG"
-	else
+	if ! source "$CONFIG" &>/dev/null; then
 		log::warn "config: $CONFIG not found"
 	fi
 fi
@@ -137,6 +132,9 @@ done
 ___ENDOF___ERROR___TRACE___
 
 #-------------------------------------------------------------------------------- SANITY CHECKS
+# CONFIG
+[[ $CONFIG && -z $QUIET ]] && log::info "config: $CONFIG"
+
 # COPYRIGHT
 [[ -z $COPYRIGHT ]] && local COPYRIGHT="COPYRIGHT"
 if [[ -r $COPYRIGHT ]]; then
@@ -148,7 +146,7 @@ fi
 
 # SRC DIR
 [[ -z $SOURCE ]] && local SOURCE="src"
-if [[ ! -d $SOURCE && $QUIET != true ]]; then
+if [[ ! -d $SOURCE ]]; then
 	log::warn "src: $SOURCE not found"
 else
 	[[ -z $QUIET ]] && log::info "src: $SOURCE"
@@ -156,7 +154,7 @@ fi
 
 # MAIN SCRIPT
 [[ -z $MAIN ]] && local MAIN="main.sh"
-if [[ ! -r $MAIN && $QUIET != true ]]; then
+if [[ ! -r $MAIN ]]; then
 	log::fail "main: $MAIN not found"
 	exit 1
 else
