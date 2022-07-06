@@ -231,7 +231,7 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
 	# include each found #include in TMP_LIB
 	for i in $(grep "^#include <.*>$" "$main" | cut -d ' ' -f2 | tr -d '<>' | sort); do
 		if [[ $i = *.sh && -f "$LIB_DIRECTORY/$i" ]]; then
-			sed "/^#\|[[:space:]]#/d" "$LIB_DIRECTORY/$i" >> "$TMP_LIB"
+			sed "/^#\|^[[:space:]]#/d" "$LIB_DIRECTORY/$i" >> "$TMP_LIB"
 			# if #git is found in the lib file, attach to TMP_HEADER
 			if LIB_GIT=$(grep "^#git <.*>$" "$LIB_DIRECTORY/$i" | cut -d ' ' -f2); then
 				log::tab "$LIB_GIT"
@@ -253,7 +253,7 @@ if [[ $SRC_FILES ]]; then
 	printf "${BCYAN}%s${OFF}\n" "compiling [src]"
 	for i in $SRC_FILES; do
 		log::tab "<${i/src\//}>"
-		sed "/^#\|[[:space:]]#/d" "$i" >> "$TMP_SRC"
+		sed "/^#\|^[[:space:]]#/d" "$i" >> "$TMP_SRC"
 		echo "#src <${i/src\//}>" >> "$TMP_HEADER"
 	done
 fi

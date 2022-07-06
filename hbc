@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#git <hbc/ed139bd>
-#nix <1657043993>
-#hbc <ed139bd>
+#git <hbc/20cccca>
+#nix <1657077119>
+#hbc <20cccca>
 #lib <stdlib/ask.sh/cc3d85c>
 #lib <stdlib/log.sh/cc3d85c>
 #lib <stdlib/trace.sh/cc3d85c>
@@ -60,11 +60,22 @@ log::prog() {
 	printf "\r\033[1;37m[ \033[0m....\033[1;37m ]\033[0m %s " "$@"
 }
 log::debug() {
+	[[ $LOG_DEBUG_ENABLED != true ]] && return 0
 	printf "\r%${COLUMNS}s" " "
 	if [[ -z $LOG_DEBUG_INIT_TIME ]]; then
 		declare -g LOG_DEBUG_INIT_TIME
 		LOG_DEBUG_INIT_TIME=${EPOCHREALTIME//./}
-		printf "\r\033[0;0m[debug 0.000000] %s\n" "$1"
+		printf "\r\033[1;90m%s\033[0m" "[debug 0.000000] "
+		if [[ $LOG_DEBUG_VERBOSE = true ]]; then
+			local f i
+			i=1
+			for f in ${BASH_LINENO[@]}; do
+				[[ $f = 0 ]] && break
+				printf "\033[0;91m%s\033[1;92m%s\033[0m" "${f}: " "${FUNCNAME[${i}]}() "
+				((i++))
+			done
+		fi
+		printf "| %s\n" "$@"
 		return
 	fi
 	local LOG_DEBUG_ADJUSTED_TIME LOG_DEBUG_DOT_INSERTION
@@ -78,9 +89,29 @@ log::debug() {
 	esac
 	LOG_DEBUG_DOT_INSERTION=$((${#LOG_DEBUG_ADJUSTED_TIME}-6))
 	if [[ $LOG_DEBUG_DOT_INSERTION -eq 0 ]]; then
-		printf "\r\033[0;0m[debug 0.${LOG_DEBUG_ADJUSTED_TIME}] %s\n" "$1"
+		printf "\r\033[1;90m%s\033[0m" "[debug 0.${LOG_DEBUG_ADJUSTED_TIME}] "
+		if [[ $LOG_DEBUG_VERBOSE = true ]]; then
+			local f i
+			i=1
+			for f in ${BASH_LINENO[@]}; do
+				[[ $f = 0 ]] && break
+				printf "\033[0;91m%s\033[1;92m%s\033[0m" "${f}: " "${FUNCNAME[${i}]}() "
+				((i++))
+			done
+		fi
+		printf "| %s\n" "$@"
 	else
-		printf "\r\033[0;0m[debug ${LOG_DEBUG_ADJUSTED_TIME:0:${LOG_DEBUG_DOT_INSERTION}}.${LOG_DEBUG_ADJUSTED_TIME:${LOG_DEBUG_DOT_INSERTION}}] %s\n" "$1"
+		printf "\r\033[1;90m%s\033[0m" "[debug ${LOG_DEBUG_ADJUSTED_TIME:0:${LOG_DEBUG_DOT_INSERTION}}.${LOG_DEBUG_ADJUSTED_TIME:${LOG_DEBUG_DOT_INSERTION}}] "
+		if [[ $LOG_DEBUG_VERBOSE = true ]]; then
+			local f i
+			i=1
+			for f in ${BASH_LINENO[@]}; do
+				[[ $f = 0 ]] && break
+				printf "\033[0;91m%s\033[1;92m%s\033[0m" "${f}: " "${FUNCNAME[${i}]}() "
+				((i++))
+			done
+		fi
+		printf "| %s\n" "$@"
 	fi
 }
 ___BEGIN___ERROR___TRACE___() {
@@ -442,7 +473,7 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
 	# include each found #include in TMP_LIB
 	for i in $(grep "^#include <.*>$" "$main" | cut -d ' ' -f2 | tr -d '<>' | sort); do
 		if [[ $i = *.sh && -f "$LIB_DIRECTORY/$i" ]]; then
-			sed "/^#\|[[:space:]]#/d" "$LIB_DIRECTORY/$i" >> "$TMP_LIB"
+			sed "/^#\|^[[:space:]]#/d" "$LIB_DIRECTORY/$i" >> "$TMP_LIB"
 			# if #git is found in the lib file, attach to TMP_HEADER
 			if LIB_GIT=$(grep "^#git <.*>$" "$LIB_DIRECTORY/$i" | cut -d ' ' -f2); then
 				log::tab "$LIB_GIT"
@@ -464,7 +495,7 @@ if [[ $SRC_FILES ]]; then
 	printf "${BCYAN}%s${OFF}\n" "compiling [src]"
 	for i in $SRC_FILES; do
 		log::tab "<${i/src\//}>"
-		sed "/^#\|[[:space:]]#/d" "$i" >> "$TMP_SRC"
+		sed "/^#\|^[[:space:]]#/d" "$i" >> "$TMP_SRC"
 		echo "#src <${i/src\//}>" >> "$TMP_HEADER"
 	done
 fi
