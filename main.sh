@@ -140,7 +140,7 @@ ___ENDOF___ERROR___TRACE___
 # COPYRIGHT
 [[ -z $COPYRIGHT ]] && local COPYRIGHT="COPYRIGHT"
 if [[ -r $COPYRIGHT ]]; then
-	log::info "copyright: $COPYRIGHT"
+	[[ -z $QUIET ]] && log::info "copyright: $COPYRIGHT"
 else
 	log::warn "copyright: $COPYRIGHT not found"
 	unset -v COPYRIGHT
@@ -151,7 +151,7 @@ fi
 if [[ ! -d $SOURCE && $QUIET != true ]]; then
 	log::warn "src: $SOURCE not found"
 else
-	log::info "src: $SOURCE"
+	[[ -z $QUIET ]] && log::info "src: $SOURCE"
 fi
 
 # MAIN SCRIPT
@@ -160,7 +160,7 @@ if [[ ! -r $MAIN && $QUIET != true ]]; then
 	log::fail "main: $MAIN not found"
 	exit 1
 else
-	log::info "main: $MAIN"
+	[[ -z $QUIET ]] && log::info "main: $MAIN"
 fi
 
 # BOTH LIB/SRC NOT FOUND
