@@ -21,9 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/dcfcab2>
-#nix <1657140817>
-#hbc <dcfcab2>
+#git <hbc/9f74bde>
+#nix <1657144417>
+#hbc <9f74bde>
 #lib <stdlib/ask.sh/cc3d85c>
 #lib <stdlib/log.sh/cc3d85c>
 #lib <stdlib/trace.sh/cc3d85c>
@@ -108,7 +108,7 @@ log::debug() {
 		return
 	fi
 	local STD_LOG_DEBUG_ADJUSTED STD_LOG_DEBUG_DOT
-	STD_LOG_DEBUG_ADJUSTED=$((${EPOCHREALTIME//./}-LOG_DEBUG_INIT))
+	STD_LOG_DEBUG_ADJUSTED=$((${EPOCHREALTIME//./}-STD_LOG_DEBUG_INIT))
 	case ${#STD_LOG_DEBUG_ADJUSTED} in
 		1) STD_LOG_DEBUG_ADJUSTED=00000${STD_LOG_DEBUG_ADJUSTED};;
 		2) STD_LOG_DEBUG_ADJUSTED=0000${STD_LOG_DEBUG_ADJUSTED};;
@@ -308,6 +308,9 @@ elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 	exit 3
 fi
 
+# UNSET ENVIRONMENT
+unset -v COPYRIGHT DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+
 # SOURCE CONFIG BEFORE OPTIONS
 local i CONFIG_FLAG_SET
 for i in $@ " "; do
@@ -358,21 +361,21 @@ case $1 in
 		fi
 		COPYRIGHT="$1"; shift;;
 	-c | --config) shift; shift;;
-	-d | --delete) local OPTION_DELETE=true; shift;;
+	-d | --delete) local DELETE=true; shift;;
 	-i | --ignore)
 		shift
 		if [[ -z $1 ]]; then
 			log::fail "hbc: no arg after --ignore"
 			exit 1
 		fi
-		local OPTION_IGNORE="${OPTION_IGNORE},$1"; shift;;
+		local IGNORE="${IGNORE},$1"; shift;;
 	-l | --library)
 		shift
 		if [[ -z $1 ]]; then
 			log::fail "hbc: no arg after --library"
 			exit 1
 		fi
-		local LIB_DIRECTORY="$1"; shift;;
+		local LIBRARY="$1"; shift;;
 	-m | --main)
 		shift
 		if [[ -z $1 ]]; then
@@ -387,8 +390,8 @@ case $1 in
 			exit 1
 		fi
 		OUTPUT="$1"; shift;;
-	-q | --quiet) OPTION_QUIET=true; shift;;
-	-r | --run) OPTION_RUN=true; shift;;
+	-q | --quiet) QUIET=true; shift;;
+	-r | --run) RUN=true; shift;;
 	-s | --source)
 		shift
 		if [[ -z $1 ]]; then
@@ -396,12 +399,12 @@ case $1 in
 			exit 1
 		fi
 		SOURCE="$1"; shift;;
-	-t | --test) OPTION_TEST=true; shift;;
+	-t | --test) TEST=true; shift;;
 	*) log::fail "hbc: invalid option: $1"; exit 1;;
 esac
 done
 # to make the config test work
-[[ $OPTION_TEST = true ]] && OPTION_RUN=true OPTION_QUIET=true
+[[ $TEST = true ]] && RUN=true QUIET=true
 ___ENDOF___ERROR___TRACE___
 
 #-------------------------------------------------------------------------------- SANITY CHECKS
@@ -416,7 +419,7 @@ fi
 
 # SRC DIR
 [[ -z $SOURCE ]] && local SOURCE="src"
-if [[ ! -d $SOURCE && $OPTION_QUIET != true ]]; then
+if [[ ! -d $SOURCE && $QUIET != true ]]; then
 	log::warn "src: $SOURCE not found"
 else
 	log::info "src: $SOURCE"
@@ -424,7 +427,7 @@ fi
 
 # MAIN SCRIPT
 [[ -z $MAIN ]] && local MAIN="main.sh"
-if [[ ! -r $MAIN && $OPTION_QUIET != true ]]; then
+if [[ ! -r $MAIN && $QUIET != true ]]; then
 	log::fail "main: $MAIN not found"
 	exit 1
 else
@@ -462,15 +465,27 @@ elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
 	exit 1
 fi
 
+# DEBUG OPTION PRINTS
+log::debug "=== log::debug init ==="
+log::debug "DELETE  | $DELETE"
+log::debug "IGNORE  | $IGNORE"
+log::debug "LIBRARY | $LIBRARY"
+log::debug "MAIN    | $MAIN"
+log::debug "OUTPUT  | $OUTPUT"
+log::debug "QUIET   | $QUIET"
+log::debug "RUN     | $RUN"
+log::debug "SOURCE  | $SOURCE"
+log::debug "TEST    | $TEST"
+
 # OUT ALREADY EXISTS WARNING
-if [[ -e $OUTPUT && $OPTION_DELETE != true && $OPTION_TEST != true ]]; then
+if [[ -e $OUTPUT && $DELETE != true && $TEST != true ]]; then
 	log::warn "$OUTPUT already exists"
 	printf "%s" "         overwrite? (y/N) "
 	ask::no && exit 2
 fi
 
 # QUIET OPTION
-[[ $OPTION_QUIET = true ]] && exec 3>&1 &>/dev/null
+[[ $QUIET = true ]] && exec 3>&1 &>/dev/null
 
 #-------------------------------------------------------------------------------- VARIABLE INIT
 ___BEGIN___ERROR___TRACE___
@@ -492,7 +507,7 @@ VERSION_HBC=$(grep -m1 "^#git <hbc/.*>$" "$0" | grep -o "\/.*>" | tr -d '/>')
 
 # LIB/SRC/MAIN
 local LIB_GIT
-[[ -z $LIB_DIRECTORY ]] && LIB_DIRECTORY="/usr/local/include"
+[[ -z $LIBRARY ]] && LIBRARY="/usr/local/include"
 #local SRC_FILES # this gets defined in the beginning sanity check
 
 # MKTEMP
@@ -519,7 +534,7 @@ TMP_LIB="$(mktemp "$TMP_DIR"/lib.XXXXXXX)"
 TMP_SRC="$(mktemp "$TMP_DIR"/src.XXXXXXX)"
 TMP_SCRATCH="$(mktemp "$TMP_DIR"/scratch.XXXXXXXXXX)"
 # TEST OUTPUT
-if [[ $OPTION_TEST = true ]]; then
+if [[ $TEST = true ]]; then
 	local TMP_TEST
 	TMP_TEST="$(mktemp "$TMP_DIR"/test.XXXXXXXXXX)"
 	OUTPUT="$TMP_TEST"
@@ -603,10 +618,10 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib || $DIRECTORY_NAME != lib* ]
 	local i
 	# include each found #include in TMP_LIB
 	for i in $(grep "^#include <.*>$" "$MAIN" | cut -d ' ' -f2 | tr -d '<>' | sort); do
-		if [[ $i = *.sh && -f "$LIB_DIRECTORY/$i" ]]; then
-			sed "/^#\|^[[:space:]]#/d" "$LIB_DIRECTORY/$i" >> "$TMP_LIB"
+		if [[ $i = *.bash || $i = *.sh && -f "${LIBRARY}/${i}" ]]; then
+			sed "/^#\|^[[:space:]]#/d" "$LIBRARY/$i" >> "$TMP_LIB"
 			# if #git is found in the lib file, attach to TMP_HEADER
-			if LIB_GIT=$(grep "^#git <.*>$" "$LIB_DIRECTORY/$i" | cut -d ' ' -f2); then
+			if LIB_GIT=$(grep "^#git <.*>$" "$LIBRARY/$i" | cut -d ' ' -f2); then
 				log::tab "$LIB_GIT"
 				echo "#lib $LIB_GIT" >> "$TMP_HEADER"
 			else
@@ -614,7 +629,7 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib || $DIRECTORY_NAME != lib* ]
 				echo "#lib <UNKNOWN>" >> "$TMP_HEADER"
 			fi
 		else
-			log::fail "$i not *.sh || $i not found"
+			log::fail "${LIBRARY}/${i} not *.sh || ${LIBRARY}/${i} not found"
 			exit 1
 		fi
 	done
@@ -775,19 +790,19 @@ log::info "700 permissions"
 chmod 700 "${OUTPUT}"
 
 # SHELLCHECK
-if [[ $OPTION_IGNORE != *ALL* || $OPTION_IGNORE != *all* ]]; then
+if [[ $IGNORE != *ALL* || $IGNORE != *all* ]]; then
 	log::info "skipping shellcheck"
 else
 	log::info "starting shellcheck"
-	if [[ $OPTION_QUIET = true ]]; then
-		if [[ $OPTION_IGNORE ]]; then
-			shellcheck "${OUTPUT}" --shell bash -e "$OPTION_IGNORE" >&3
+	if [[ $QUIET = true ]]; then
+		if [[ $IGNORE ]]; then
+			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE" >&3
 		else
 			shellcheck "${OUTPUT}" --shell bash >&3
 		fi
 	else
-		if [[ $OPTION_IGNORE ]]; then
-			shellcheck "${OUTPUT}" --shell bash -e "$OPTION_IGNORE"
+		if [[ $IGNORE ]]; then
+			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE"
 		else
 			shellcheck "${OUTPUT}" --shell bash
 		fi
@@ -795,7 +810,7 @@ else
 fi
 
 # DELETE TMP_DIR
-if [[ $OPTION_TEST != true ]]; then
+if [[ $TEST != true ]]; then
 	log::info "deleting $TMP_DIR"
 	rm -rf "$TMP_DIR"
 fi
@@ -807,17 +822,20 @@ return 0
 }
 # EXECUTE
 hbc $@
-if [[ $? = 0 && $OPTION_RUN = true ]]; then
-	if [[ $OPTION_TEST = true ]]; then
+if [[ $? = 0 && $RUN = true ]]; then
+	if [[ $TEST = true ]]; then
+		log::debug "beginning --test"
 		trap 'trap - EXIT; rm -rf "$TMP_DIR"' EXIT
 		bash "$OUTPUT" >&3
 		exit $?
-	elif [[ $OPTION_QUIET = true ]]; then
+	elif [[ $QUIET = true ]]; then
+		log::debug "beginning --run --quiet"
 		exec ./"$OUTPUT" >&3
 	else
+		log::debug "beginning --run"
 		exec ./"$OUTPUT"
 	fi
-else
-	exit 0
 fi
+log::debug "hbc done"
+exit 0
 #-------------------------------------------------------------------------------- ENDOF MAIN
