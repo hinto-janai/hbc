@@ -318,6 +318,7 @@ echo "#!/usr/bin/env bash" > "$TMP_HEADER"
 # LICENSE
 if [[ $LICENSE ]]; then
 	log::tab "add: $LICENSE"
+	echo "#" >> "$TMP_HEADER"
 	cat "$LICENSE" >> "$TMP_HEADER"
 	echo  >> "$TMP_HEADER"
 fi
