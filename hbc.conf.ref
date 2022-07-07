@@ -5,9 +5,9 @@
 ## ================= ##
 
 ## -a | --add
-## add a text file (like copyright) on top of output, default: [COPYRIGHT]
+## add a text file (like a license) on top of output, default: [LICENSE]
 ## usage: <FILE_PATH>
-COPYRIGHT=
+LICENSE=
 
 ## -d | --delete
 ## overwrite output file if it already exists

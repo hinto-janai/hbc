@@ -10,7 +10,7 @@ ___BEGIN___ERROR___TRACE___
 if [[ $* = *"-h"* || $* = *"--help"* ]]; then
 printf "${BWHITE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s\n" "USAGE: " "hbc " "[OPTION] " "[ARGUMENT]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
-"    -a" " |" " --add" "     <text file>" "          add a text file (like copyright) on top of output, default: [COPYRIGHT]" \
+"    -a" " |" " --add" "     <text file>" "          add a text file (like a license) on top of output, default: [LICENSE]" \
 "    -c" " |" " --config" "  <hbc config file>" "    specify hbc config to use, default: [\$PWD/hbc.conf] or [/etc/hbc.conf]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${OFF}%s\n" \
 "    -d" " |" " --delete" "                       overwrite output file if it already exists"
@@ -38,7 +38,7 @@ elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 fi
 
 # UNSET ENVIRONMENT
-unset -v CONFIG COPYRIGHT DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+unset -v CONFIG LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
 
 # SOURCE CONFIG BEFORE OPTIONS
 local i CONFIG_FLAG_SET
@@ -83,7 +83,7 @@ case $1 in
 			log::fail "hbc: no arg after --add"
 			exit 1
 		fi
-		COPYRIGHT="$1"; shift;;
+		LICENSE="$1"; shift;;
 	-c | --config) shift; shift;;
 	-d | --delete) local DELETE=true; shift;;
 	-i | --ignore)
@@ -135,13 +135,13 @@ ___ENDOF___ERROR___TRACE___
 # CONFIG
 [[ $CONFIG && -z $QUIET ]] && log::info "config: $CONFIG"
 
-# COPYRIGHT
-[[ -z $COPYRIGHT ]] && local COPYRIGHT="COPYRIGHT"
-if [[ -r $COPYRIGHT ]]; then
-	[[ -z $QUIET ]] && log::info "copyright: $COPYRIGHT"
+# LICENSE
+[[ -z $LICENSE ]] && local LICENSE="LICENSE"
+if [[ -r $LICENSE ]]; then
+	[[ -z $QUIET ]] && log::info "add: $LICENSE"
 else
-	log::warn "copyright: $COPYRIGHT not found"
-	unset -v COPYRIGHT
+	log::warn "add: $LICENSE not found"
+	unset -v LICENSE
 fi
 
 # SRC DIR
@@ -306,10 +306,10 @@ printf "${BBLUE}%s${OFF}\n" "compiling [header] ***************"
 log::tab "#!/usr/bin/env bash"
 echo "#!/usr/bin/env bash" > "$TMP_HEADER"
 
-# COPYRIGHT
-if [[ $COPYRIGHT ]]; then
-	log::tab "copyright: $COPYRIGHT"
-	cat "$COPYRIGHT" >> "$TMP_HEADER"
+# LICENSE
+if [[ $LICENSE ]]; then
+	log::tab "add: $LICENSE"
+	cat "$LICENSE" >> "$TMP_HEADER"
 	echo  >> "$TMP_HEADER"
 fi
 
