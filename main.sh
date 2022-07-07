@@ -8,7 +8,7 @@ hbc() {
 ___BEGIN___ERROR___TRACE___
 # HELP OPTION
 if [[ $* = *"-h"* || $* = *"--help"* ]]; then
-printf "${BWHITE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s\n" "USAGE: " "hbc " "[OPTION] " "[ARGUMENT]"
+printf "${BWHITE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s\n\n" "USAGE: " "hbc " "--OPTION " "<ARGUMENT>"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
 "    -a" " |" " --add" "     <text file>" "          add a text file (like a license) on top of output, default: [LICENSE]" \
 "    -c" " |" " --config" "  <hbc config file>" "    specify hbc config to use, default: [\$PWD/hbc.conf] or [/etc/hbc.conf]"
@@ -30,6 +30,11 @@ printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${OFF}%s\n" \
 "    -t" " |" " --test" "                         --run & --quiet the output from memory, no file made" \
 "    -v" " |" " --version" "                      print this hbc's time of compile and exit unsuccessfully"
+printf "${OFF}%s\n" \
+	"" \
+	"hbc - hinto's bash compiler" \
+	"Full documentation <https://github.com/hinto-janaiyo/hbc>" \
+	"Copyright (c) 2022 hinto-janaiyo <https://github.com/hinto-janaiyo>"
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
