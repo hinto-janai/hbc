@@ -182,6 +182,11 @@ if [[ $DIRECTORY_NAME = hbc && -z $OUTPUT ]]; then
 elif [[ -z $OUTPUT ]]; then
 	OUTPUT="${DIRECTORY_NAME}.sh"
 fi
+case $DIRECTORY_NAME in
+	*lib|lib*|*Lib|Lib*|*LIB|LIB*)
+		DIRECTORY_IS_LIB=true
+		;;
+esac
 
 # IF MAIN/OUT ARE WEIRD CHARACTERS
 if [[ $MAIN != [A-Za-z0-9_/~$]* ]]; then
@@ -194,6 +199,7 @@ fi
 
 # DEBUG OPTION PRINTS
 log::debug "=== log::debug init ==="
+log::debug "ADD     | $LICENSE"
 log::debug "DELETE  | $DELETE"
 log::debug "IGNORE  | $IGNORE"
 log::debug "LIBRARY | $LIBRARY"
@@ -203,6 +209,9 @@ log::debug "QUIET   | $QUIET"
 log::debug "RUN     | $RUN"
 log::debug "SOURCE  | $SOURCE"
 log::debug "TEST    | $TEST"
+if [[ $DIRECTORY_IS_LIB = true ]]; then
+	log::debug "library detected, not adding safety headers!"
+fi
 
 # OUT ALREADY EXISTS WARNING
 if [[ -e $OUTPUT && $DELETE != true && $TEST != true ]]; then
@@ -334,13 +343,16 @@ log::tab "hbc: $VERSION_HBC"
 echo "#hbc <$VERSION_HBC>" >> "$TMP_HEADER"
 
 #-------------------------------------------------------------------------------- SAFETY
-printf "${BRED}%s${OFF}\n" "creating [safety] ****************"
-log::tab "<safety>"
-echo "$SAFETY_HEADER" >> "$TMP_SAFETY"
+# ONLY CREATE SAFETY IF NOT CREATING LIBRARY CODE
+if [[ $DIRECTORY_IS_LIB != true ]]; then
+	printf "${BRED}%s${OFF}\n" "creating [safety] ****************"
+	log::tab "<safety>"
+	echo "$SAFETY_HEADER" >> "$TMP_SAFETY"
+fi
 
 #-------------------------------------------------------------------------------- LIB
 # LIB LOOP
-if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib || $DIRECTORY_NAME != lib* ]]; then
+if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 	printf "${BPURPLE}%s${OFF}\n" "compiling [lib] ******************"
 	local i
 	# include each found #include in TMP_LIB
@@ -348,7 +360,7 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib || $DIRECTORY_NAME != lib* ]
 		if [[ $i = *.bash || $i = *.sh && -f "${LIBRARY}/${i}" ]]; then
 			sed "/^#\|^[[:space:]]#/d" "$LIBRARY/$i" >> "$TMP_LIB"
 			# if #git is found in the lib file, attach to TMP_HEADER
-			if LIB_GIT=$(grep "^#git <.*>$" "$LIBRARY/$i" | cut -d ' ' -f2); then
+			if LIB_GIT=$(grep -m1 "^#git <.*>$" "$LIBRARY/$i" | cut -d ' ' -f2); then
 				log::tab "$LIB_GIT"
 				echo "#lib $LIB_GIT" >> "$TMP_HEADER"
 			else
@@ -431,14 +443,16 @@ log::tab "[header] ---------> line $(wc -l "$OUTPUT" | cut -f1 -d ' ')"
 cat "$TMP_HEADER" > "$OUTPUT"
 
 # SAFETY
-echo >> "$OUTPUT"
-log::tab "[safety::header] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
-echo "$HEADER_SAFETY" >> "$OUTPUT"
-log::tab "[safety] ---------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
-cat "$TMP_SAFETY" >> "$OUTPUT"
+if [[ $DIRECTORY_IS_LIB != true ]]; then
+	echo >> "$OUTPUT"
+	log::tab "[safety::header] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	echo "$HEADER_SAFETY" >> "$OUTPUT"
+	log::tab "[safety] ---------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
+	cat "$TMP_SAFETY" >> "$OUTPUT"
+fi
 
 # LIB
-if [[ $EXISTS_LIB = true && $DIRECTORY_NAME != *lib ]]; then
+if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 	echo >> "$OUTPUT"
 	log::tab "[lib::header] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$HEADER_LIB" >> "$OUTPUT"
@@ -466,14 +480,14 @@ if [[ $SRC_FILES ]]; then
 	echo >> "$OUTPUT"
 	log::tab "[src::header] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$HEADER_SRC" >> "$OUTPUT"
-	if [[ $DIRECTORY_NAME != *lib ]]; then
+	if [[ $DIRECTORY_IS_LIB != true ]]; then
 		log::tab "[src::safety] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 		echo "$SAFETY_SRC" >> "$OUTPUT"
 	fi
 	log::tab "[src] ------------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	cat "$TMP_SRC" >> "$OUTPUT"
 	# DECLARE -FR
-	if [[ $DIRECTORY_NAME != *lib ]]; then
+	if [[ $DIRECTORY_IS_LIB != true ]]; then
 		log::tab "[src::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 		local FUNCTIONS_SRC
 		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
@@ -490,7 +504,7 @@ if [[ $SRC_FILES ]]; then
 fi
 
 # SAFETY END
-if [[ $DIRECTORY_NAME != *lib ]]; then
+if [[ $DIRECTORY_IS_LIB != true ]]; then
 	log::tab "[safety::end] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$SAFETY_END" >> "$OUTPUT"
 fi
