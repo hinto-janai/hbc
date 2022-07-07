@@ -38,7 +38,7 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	date -d @"$(grep -m1 "#nix <.*>$" "$0" | tr -d '#nix<> ')"
+	___TEMPORARY___LINE___MEANT___FOR___REPLACEMENT___
 	exit 3
 fi
 
@@ -526,6 +526,14 @@ if [[ $EXISTS_MAIN ]]; then
 	echo "$EXISTS_MAIN" >> "$OUTPUT"
 	log::tab "[main::endof] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$ENDOF_MAIN" >> "$OUTPUT"
+
+	# HBC INLINE VERSION/DATE REPLACEMENT
+	local VERSION_LINE
+	VERSION_LINE="$(printf "%s\n" "$(date -d @$EPOCHSECONDS "+%Y %B %d") - $(git rev-parse HEAD 2>/dev/null)")"
+	VERSION_LINE='printf "%s\\n" '\""$VERSION_LINE"\"''
+	# only replace first instace
+	sed -i '0,/___TEMPORARY___LINE___MEANT___FOR___REPLACEMENT___/s//'"$VERSION_LINE"'/' $OUTPUT
+	log::tab "hbc version replacement"
 fi
 
 # END STATS (WC)

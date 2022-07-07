@@ -2,7 +2,7 @@
 #
 # hbc - hinto's bash compiler
 #
-# Copyright (c) 2022 hinto-janaiyo
+# Copyright (c) 2022 hinto-janaiyo <https://github.com/hinto-janaiyo>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/095c49f>
-#nix <1657197512>
-#hbc <095c49f>
+#git <hbc/fdd861a>
+#nix <1657200995>
+#hbc <fdd861a>
 #lib <stdlib/ask.sh/9c906b1>
 #lib <stdlib/log.sh/9c906b1>
 #lib <stdlib/trace.sh/9c906b1>
@@ -313,7 +313,7 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	date -d @"$(grep -m1 "#nix <.*>$" "$0" | tr -d '#nix<> ')"
+	printf "%s\n" "2022 July 07 - fdd861a42f936f8091d918adc04518b34800078b"
 	exit 3
 fi
 
@@ -801,6 +801,14 @@ if [[ $EXISTS_MAIN ]]; then
 	echo "$EXISTS_MAIN" >> "$OUTPUT"
 	log::tab "[main::endof] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$ENDOF_MAIN" >> "$OUTPUT"
+
+	# HBC INLINE VERSION/DATE REPLACEMENT
+	local VERSION_LINE
+	VERSION_LINE="$(printf "%s\n" "$(date -d @$EPOCHSECONDS "+%Y %B %d") - $(git rev-parse HEAD 2>/dev/null)")"
+	VERSION_LINE='printf "%s\\n" '\""$VERSION_LINE"\"''
+	# only replace first instace
+	sed -i '0,/___TEMPORARY___LINE___MEANT___FOR___REPLACEMENT___/s//'"$VERSION_LINE"'/' $OUTPUT
+	log::tab "hbc version replacement"
 fi
 
 # END STATS (WC)
