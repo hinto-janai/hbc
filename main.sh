@@ -383,7 +383,7 @@ fi
 #-------------------------------------------------------------------------------- SRC
 # SRC LOOP
 if [[ $SRC_FILES ]]; then
-	printf "${BCYAN}%s${OFF}\n" "compiling [src]"
+	printf "${BCYAN}%s${OFF}\n" "compiling [src] ******************"
 	for i in $SRC_FILES; do
 		log::tab "<${i/src\//}>"
 		sed "/^#\|^[[:space:]]#/d" "$i" >> "$TMP_SRC"
