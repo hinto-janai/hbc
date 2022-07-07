@@ -528,12 +528,14 @@ if [[ $EXISTS_MAIN ]]; then
 	echo "$ENDOF_MAIN" >> "$OUTPUT"
 
 	# HBC INLINE VERSION/DATE REPLACEMENT
-	local VERSION_LINE
-	VERSION_LINE="$(printf "%s\n" "$(date -d @$EPOCHSECONDS "+%Y %B %d") - $(git rev-parse HEAD 2>/dev/null)")"
-	VERSION_LINE='printf "%s\\n" '\""$VERSION_LINE"\"''
-	# only replace first instace
-	sed -i '0,/___TEMPORARY___LINE___MEANT___FOR___REPLACEMENT___/s//'"$VERSION_LINE"'/' $OUTPUT
-	log::tab "hbc version replacement"
+	if [[ $DIRECTORY_NAME = hbc ]]; then
+		local VERSION_LINE
+		VERSION_LINE="$(printf "%s\n" "$(date -d @$EPOCHSECONDS "+%Y %B %d") - $(git rev-parse HEAD 2>/dev/null)")"
+		VERSION_LINE='printf "%s\\n" '\""$VERSION_LINE"\"''
+		# only replace first instace
+		sed -i '0,/___TEMPORARY___LINE___MEANT___FOR___REPLACEMENT___/s//'"$VERSION_LINE"'/' $OUTPUT
+		log::tab "hbc version replacement"
+	fi
 fi
 
 # END STATS (WC)
