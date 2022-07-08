@@ -1,7 +1,7 @@
 #include <stdlib/ask.sh>
+#include <stdlib/const.sh>
 #include <stdlib/log.sh>
 #include <stdlib/trace.sh>
-#include <stdlib/var.sh>
 
 hbc() {
 #-------------------------------------------------------------------------------- HBC OPTIONS
