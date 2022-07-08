@@ -43,7 +43,40 @@ elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 fi
 
 # UNSET ENVIRONMENT
-unset -v CONFIG LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+unset -v ADD OPTIONS CONFIG LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+
+# PARSE CONFIG FILE (because directly sourcing is spooky)
+hbc_parse_config() {
+	local i IFS=$'\n' OPTIONS || return 1
+	mapfile OPTIONS < $1 || return 2
+	for i in ${OPTIONS[@]}; do
+	    [[ $i =~ ^ADD=[[:alnum:]./_-]*$ ]]                   && declare -g LICENSE="${i/*=/}"
+	    [[ $i =~ ^DELETE=true[[:space:]]*$ ]]                && declare -g DELETE="true"
+		[[ $i =~ ^IGNORE=SC.*$ ]]                            && declare -g IGNORE=${i/*=/}
+		[[ $i =~ ^LIBRARY=[[:alnum:]./_-]*$ ]]               && declare -g LIBRARY="${i/*=/}"
+		[[ $i =~ ^MAIN=[[:alnum:]./_-]*$ ]]                  && declare -g MAIN="${i/*=/}"
+		[[ $i =~ ^OUTPUT=[[:alnum:]./_-]*$ ]]                && declare -g OUTPUT="${i/*=/}"
+	    [[ $i =~ ^QUIET=true[[:space:]]*$ ]]                 && declare -g QUIET="true"
+	    [[ $i =~ ^RUN=true[[:space:]]*$ ]]                   && declare -g RUN="true"
+		[[ $i =~ ^SOURCE=[[:alnum:]./_-]*$ ]]                && declare -g SOURCE="${i/*=/}"
+	    [[ $i =~ ^TEST=true[[:space:]]*$ ]]                  && declare -g TEST="true"
+	    [[ $i =~ ^STD_LOG_DEBUG=true[[:space:]]*$ ]]         && declare -g STD_LOG_DEBUG="true"
+	    [[ $i =~ ^STD_LOG_DEBUG_VERBOSE=true[[:space:]]*$ ]] && declare -g STD_LOG_DEBUG_VERBOSE="true"
+	done
+	log::debug "=== hbc_parse_config ==="
+	log::debug "ADD     | $LICENSE"
+	log::debug "CONFIG  | $CONFIG"
+	log::debug "DELETE  | $DELETE"
+	log::debug "IGNORE  | $IGNORE"
+	log::debug "LIBRARY | $LIBRARY"
+	log::debug "MAIN    | $MAIN"
+	log::debug "OUTPUT  | $OUTPUT"
+	log::debug "QUIET   | $QUIET"
+	log::debug "RUN     | $RUN"
+	log::debug "SOURCE  | $SOURCE"
+	log::debug "TEST    | $TEST"
+	return 0
+}
 
 # SOURCE CONFIG BEFORE OPTIONS
 local i CONFIG_FLAG_SET
@@ -56,7 +89,7 @@ for i in $@ " "; do
 			log::fail "hbc: no arg after --config"
 			exit 1
 		fi
-		if source "$CONFIG"; then
+		if hbc_parse_config "$CONFIG"; then
 			break
 		else
 			log::fail "config: $CONFIG"
@@ -68,13 +101,13 @@ done
 # IF NO --CONFIG, HBC DEFAULT CONFIG
 if [[ -r "$PWD/hbc.conf" && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="$PWD/hbc.conf"
-	if ! source "$CONFIG" &>/dev/null; then
-		log::warn "config: $CONFIG not found"
+	if ! hbc_parse_config "$CONFIG"; then
+		log::warn "config: $CONFIG fail"
 	fi
 elif [[ -r /etc/hbc.conf && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="/etc/hbc.conf"
-	if ! source "$CONFIG" &>/dev/null; then
-		log::warn "config: $CONFIG not found"
+	if ! hbc_parse_config "$CONFIG"; then
+		log::warn "config: $CONFIG fail"
 	fi
 fi
 
@@ -203,8 +236,9 @@ elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
 fi
 
 # DEBUG OPTION PRINTS
-log::debug "=== log::debug init ==="
+log::debug "=== post --option debug ==="
 log::debug "ADD     | $LICENSE"
+log::debug "CONFIG  | $CONFIG"
 log::debug "DELETE  | $DELETE"
 log::debug "IGNORE  | $IGNORE"
 log::debug "LIBRARY | $LIBRARY"

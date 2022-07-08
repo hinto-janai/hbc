@@ -22,13 +22,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/7a8caa0>
-#nix <1657284908>
-#hbc <7a8caa0>
-#lib <stdlib/ask.sh/59ba0e7>
-#lib <stdlib/const.sh/59ba0e7>
-#lib <stdlib/log.sh/59ba0e7>
-#lib <stdlib/trace.sh/59ba0e7>
+#git <hbc/f0569cf>
+#nix <1657321866>
+#hbc <f0569cf>
+#lib <stdlib/ask.sh/35457d9>
+#lib <stdlib/const.sh/35457d9>
+#lib <stdlib/log.sh/35457d9>
+#lib <stdlib/trace.sh/35457d9>
 
 #-------------------------------------------------------------------------------- BEGIN SAFETY
 POSIXLY_CORRECT= || exit 90
@@ -124,21 +124,21 @@ log::prog() {
 }
 log::debug() {
 	[[ $STD_LOG_DEBUG != true ]] && return 0
-	printf "\r\e[2K"
 	if [[ -z $STD_LOG_DEBUG_INIT ]]; then
 		declare -g STD_LOG_DEBUG_INIT
 		STD_LOG_DEBUG_INIT=${EPOCHREALTIME//./}
-		printf "\r\033[1;90m%s\033[0m" "[log::debug 0.000000] "
+		printf "\r\e[2K\033[1;90m%s\033[0m%s" "[log::debug 0.000000] " "${BASH_LINENO}: $@ "
 		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
+			printf "\033[1;93m%s" "-> "
 			local f i
 			i=1
 			for f in ${BASH_LINENO[@]}; do
 				[[ $f = 0 ]] && break
-				printf "\033[1;91m%s\033[1;92m%s\033[0m" "${f}: " "${FUNCNAME[${i}]}() "
+				printf "\033[1;91m%s\033[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
 				((i++))
 			done
 		fi
-		printf "| %s\n" "$@"
+		printf "\033[0m\n"
 		return
 	fi
 	local STD_LOG_DEBUG_ADJUSTED STD_LOG_DEBUG_DOT
@@ -152,30 +152,22 @@ log::debug() {
 	esac
 	STD_LOG_DEBUG_DOT=$((${#STD_LOG_DEBUG_ADJUSTED}-6))
 	if [[ $STD_LOG_DEBUG_DOT -eq 0 ]]; then
-		printf "\r\033[1;90m%s\033[0m" "[log::debug 0.${STD_LOG_DEBUG_ADJUSTED}] "
-		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
-			local f i
-			i=1
-			for f in ${BASH_LINENO[@]}; do
-				[[ $f = 0 ]] && break
-				printf "\033[1;91m%s\033[1;92m%s\033[0m" "${f}: " "${FUNCNAME[${i}]}() "
-				((i++))
-			done
-		fi
-		printf "| %s\n" "$@"
+		printf "\r\e[2K\033[1;90m%s\033[0m%s" "[log::debug 0.${STD_LOG_DEBUG_ADJUSTED}] " "${BASH_LINENO}: $@ "
 	else
-		printf "\r\033[1;90m%s\033[0m" "[log::debug ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] "
-		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
-			local f i
-			i=1
-			for f in ${BASH_LINENO[@]}; do
-				[[ $f = 0 ]] && break
-				printf "\033[1;91m%s\033[1;92m%s\033[0m" "${f}: " "${FUNCNAME[${i}]}() "
-				((i++))
-			done
-		fi
-		printf "| %s\n" "$@"
+		printf "\r\e[2K\033[1;90m%s\033[0m%s" \
+			"[log::debug ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] " "${BASH_LINENO}: $@ "
 	fi
+	if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
+		printf "\033[1;93m%s" "-> "
+		local f i
+		i=1
+		for f in ${BASH_LINENO[@]}; do
+			[[ $f = 0 ]] && break
+			printf "\033[1;91m%s\033[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
+			((i++))
+		done
+	fi
+	printf "\033[0m\n"
 }
 ___BEGIN___ERROR___TRACE___() {
 	POSIXLY_CORRECT= || exit 8
@@ -319,12 +311,45 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 July 08 - 7a8caa09c62ba1cda886e37be1a7f5a2efef11ac"
+	printf "%s\n" "2022 July 08 - f0569cf01bc9b8cc06378969d48545e76d27ae5d"
 	exit 3
 fi
 
 # UNSET ENVIRONMENT
-unset -v CONFIG LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+unset -v ADD OPTIONS CONFIG LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+
+# PARSE CONFIG FILE (because directly sourcing is spooky)
+hbc_parse_config() {
+	local i IFS=$'\n' OPTIONS || return 1
+	mapfile OPTIONS < $1 || return 2
+	for i in ${OPTIONS[@]}; do
+	    [[ $i =~ ^ADD=[[:alnum:]./_-]*$ ]]                   && declare -g LICENSE="${i/*=/}"
+	    [[ $i =~ ^DELETE=true[[:space:]]*$ ]]                && declare -g DELETE="true"
+		[[ $i =~ ^IGNORE=SC.*$ ]]                            && declare -g IGNORE=${i/*=/}
+		[[ $i =~ ^LIBRARY=[[:alnum:]./_-]*$ ]]               && declare -g LIBRARY="${i/*=/}"
+		[[ $i =~ ^MAIN=[[:alnum:]./_-]*$ ]]                  && declare -g MAIN="${i/*=/}"
+		[[ $i =~ ^OUTPUT=[[:alnum:]./_-]*$ ]]                && declare -g OUTPUT="${i/*=/}"
+	    [[ $i =~ ^QUIET=true[[:space:]]*$ ]]                 && declare -g QUIET="true"
+	    [[ $i =~ ^RUN=true[[:space:]]*$ ]]                   && declare -g RUN="true"
+		[[ $i =~ ^SOURCE=[[:alnum:]./_-]*$ ]]                && declare -g SOURCE="${i/*=/}"
+	    [[ $i =~ ^TEST=true[[:space:]]*$ ]]                  && declare -g TEST="true"
+	    [[ $i =~ ^STD_LOG_DEBUG=true[[:space:]]*$ ]]         && declare -g STD_LOG_DEBUG="true"
+	    [[ $i =~ ^STD_LOG_DEBUG_VERBOSE=true[[:space:]]*$ ]] && declare -g STD_LOG_DEBUG_VERBOSE="true"
+	done
+	log::debug "=== hbc_parse_config ==="
+	log::debug "ADD     | $LICENSE"
+	log::debug "CONFIG  | $CONFIG"
+	log::debug "DELETE  | $DELETE"
+	log::debug "IGNORE  | $IGNORE"
+	log::debug "LIBRARY | $LIBRARY"
+	log::debug "MAIN    | $MAIN"
+	log::debug "OUTPUT  | $OUTPUT"
+	log::debug "QUIET   | $QUIET"
+	log::debug "RUN     | $RUN"
+	log::debug "SOURCE  | $SOURCE"
+	log::debug "TEST    | $TEST"
+	return 0
+}
 
 # SOURCE CONFIG BEFORE OPTIONS
 local i CONFIG_FLAG_SET
@@ -337,7 +362,7 @@ for i in $@ " "; do
 			log::fail "hbc: no arg after --config"
 			exit 1
 		fi
-		if source "$CONFIG"; then
+		if hbc_parse_config "$CONFIG"; then
 			break
 		else
 			log::fail "config: $CONFIG"
@@ -349,13 +374,13 @@ done
 # IF NO --CONFIG, HBC DEFAULT CONFIG
 if [[ -r "$PWD/hbc.conf" && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="$PWD/hbc.conf"
-	if ! source "$CONFIG" &>/dev/null; then
-		log::warn "config: $CONFIG not found"
+	if ! hbc_parse_config "$CONFIG"; then
+		log::warn "config: $CONFIG fail"
 	fi
 elif [[ -r /etc/hbc.conf && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="/etc/hbc.conf"
-	if ! source "$CONFIG" &>/dev/null; then
-		log::warn "config: $CONFIG not found"
+	if ! hbc_parse_config "$CONFIG"; then
+		log::warn "config: $CONFIG fail"
 	fi
 fi
 
@@ -484,8 +509,9 @@ elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
 fi
 
 # DEBUG OPTION PRINTS
-log::debug "=== log::debug init ==="
+log::debug "=== post --option debug ==="
 log::debug "ADD     | $LICENSE"
+log::debug "CONFIG  | $CONFIG"
 log::debug "DELETE  | $DELETE"
 log::debug "IGNORE  | $IGNORE"
 log::debug "LIBRARY | $LIBRARY"
