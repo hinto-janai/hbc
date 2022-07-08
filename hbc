@@ -22,11 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/f0569cf>
-#nix <1657321866>
-#hbc <f0569cf>
+#git <hbc/fa4e3fa>
+#nix <1657324449>
+#hbc <fa4e3fa>
 #lib <stdlib/ask.sh/35457d9>
 #lib <stdlib/const.sh/35457d9>
+#lib <stdlib/debug.sh/35457d9>
 #lib <stdlib/log.sh/35457d9>
 #lib <stdlib/trace.sh/35457d9>
 
@@ -94,6 +95,53 @@ readonly IPURPLE="\033[0;95m"
 readonly ICYAN="\033[0;96m"
 readonly IWHITE="\033[0;97m"
 readonly OFF="\033[0m"
+debug() {
+	[[ $STD_DEBUG != true ]] && return 0
+	trap 'STD_DEBUG_CMD="$BASH_COMMAND" STD_DEBUG_FUNC=(${BASH_LINENO[@]}) STD_DEBUG_CMD_NUM="$LINENO" STD_DEBUG_PIPE=(${PIPESTATUS[@]});debug::trap' DEBUG
+}
+debug::trap() {
+	if [[ -z $STD_DEBUG_INIT ]]; then
+		declare -g STD_DEBUG_INIT
+		STD_DEBUG_INIT=${EPOCHREALTIME//./}
+		printf "\r\e[2K\033[1;90m%s\033[1;93m%s\033[0m%s\033[1;93m%s" \
+			"[debug 0.000000] " "[ \$_ ] " "${STD_DEBUG_CMD_NUM}: $STD_DEBUG_CMD " "-> "
+		local f
+		local i=1
+		for f in ${STD_DEBUG_FUNC[@]-1}; do
+			[[ $f = 0 ]] && break
+			printf "\033[1;91m%s\033[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
+			((i++))
+		done
+		printf "\033[0m\n"
+		return
+	fi
+	local STD_DEBUG_ADJUSTED STD_DEBUG_DOT
+	STD_DEBUG_ADJUSTED=$((${EPOCHREALTIME//./}-STD_DEBUG_INIT))
+	case ${#STD_DEBUG_ADJUSTED} in
+		1) STD_DEBUG_ADJUSTED=00000${STD_DEBUG_ADJUSTED//$'\n'};;
+		2) STD_DEBUG_ADJUSTED=0000${STD_DEBUG_ADJUSTED//$'\n'};;
+		3) STD_DEBUG_ADJUSTED=000${STD_DEBUG_ADJUSTED//$'\n'};;
+		4) STD_DEBUG_ADJUSTED=00${STD_DEBUG_ADJUSTED//$'\n'};;
+		5) STD_DEBUG_ADJUSTED=0${STD_DEBUG_ADJUSTED//$'\n'};;
+	esac
+	STD_DEBUG_DOT=$((${#STD_DEBUG_ADJUSTED}-6))
+	if [[ $STD_DEBUG_DOT -eq 0 ]]; then
+		printf "\r\e[2K\033[1;90m%s\033[1;93m%s\033[0m%s\033[1;93m%s" \
+			"[debug 0.${STD_DEBUG_ADJUSTED}] " "[ \$_ ] " "${STD_DEBUG_CMD_NUM}: $STD_DEBUG_CMD " "-> "
+	else
+		printf "\r\e[2K\033[1;90m%s\033[1;93m%s\033[0m%s\033[1;93m%s" \
+			"[debug ${STD_DEBUG_ADJUSTED:0:${STD_DEBUG_DOT}}.${STD_DEBUG_ADJUSTED:${STD_DEBUG_DOT}}] " \
+			"[ \$_ ] " "${STD_DEBUG_CMD_NUM}: $STD_DEBUG_CMD " "-> "
+	fi
+	local f
+	local i=1
+	for f in ${STD_DEBUG_FUNC[@]-1}; do
+		[[ $f = 0 ]] && break
+		printf "\033[1;91m%s\033[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
+		((i++))
+	done
+	printf "\033[0m\n"
+}
 log::ok() {
 	printf "\r\e[2K"
 	printf "\r\033[1;32m[  OK  ]\033[0m %s\n" "$@"
@@ -127,7 +175,7 @@ log::debug() {
 	if [[ -z $STD_LOG_DEBUG_INIT ]]; then
 		declare -g STD_LOG_DEBUG_INIT
 		STD_LOG_DEBUG_INIT=${EPOCHREALTIME//./}
-		printf "\r\e[2K\033[1;90m%s\033[0m%s" "[log::debug 0.000000] " "${BASH_LINENO}: $@ "
+		printf "\r\e[2K\033[1;90m%s\033[0m%s" "[log::debug 0.000000] " "${BASH_LINENO}: $* "
 		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
 			printf "\033[1;93m%s" "-> "
 			local f i
@@ -152,10 +200,10 @@ log::debug() {
 	esac
 	STD_LOG_DEBUG_DOT=$((${#STD_LOG_DEBUG_ADJUSTED}-6))
 	if [[ $STD_LOG_DEBUG_DOT -eq 0 ]]; then
-		printf "\r\e[2K\033[1;90m%s\033[0m%s" "[log::debug 0.${STD_LOG_DEBUG_ADJUSTED}] " "${BASH_LINENO}: $@ "
+		printf "\r\e[2K\033[1;90m%s\033[0m%s" "[log::debug 0.${STD_LOG_DEBUG_ADJUSTED}] " "${BASH_LINENO}: $* "
 	else
 		printf "\r\e[2K\033[1;90m%s\033[0m%s" \
-			"[log::debug ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] " "${BASH_LINENO}: $@ "
+			"[log::debug ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] " "${BASH_LINENO}: $* "
 	fi
 	if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
 		printf "\033[1;93m%s" "-> "
@@ -262,6 +310,8 @@ ___ENDOF___ERROR___TRACE___() {
 declare -fr ask::yes
 declare -fr ask::no
 declare -fr ask::sudo
+declare -fr debug
+declare -fr debug::trap
 declare -fr log::ok
 declare -fr log::info
 declare -fr log::warn
@@ -279,6 +329,7 @@ set +eo pipefail || exit 118
 hbc() {
 #-------------------------------------------------------------------------------- HBC OPTIONS
 ___BEGIN___ERROR___TRACE___
+debug
 # HELP OPTION
 if [[ $* = *"-h"* || $* = *"--help"* ]]; then
 printf "${BWHITE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s\n\n" "USAGE: " "hbc " "--OPTION " "<ARGUMENT>"
@@ -311,7 +362,7 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 July 08 - f0569cf01bc9b8cc06378969d48545e76d27ae5d"
+	printf "%s\n" "2022 July 08 - fa4e3fa59b4acd8abd0d0adb74c75f55f3a8ebc1"
 	exit 3
 fi
 
@@ -522,7 +573,7 @@ log::debug "RUN     | $RUN"
 log::debug "SOURCE  | $SOURCE"
 log::debug "TEST    | $TEST"
 if [[ $DIRECTORY_IS_LIB = true ]]; then
-	log::debug "library detected, not adding safety headers!"
+	log::warn "library detected, not adding safety headers!"
 fi
 
 # OUT ALREADY EXISTS WARNING
@@ -854,7 +905,7 @@ log::info "700 permissions"
 chmod 700 "${OUTPUT}"
 
 # SHELLCHECK
-if [[ $IGNORE != *ALL* || $IGNORE != *all* ]]; then
+if [[ $IGNORE = *ALL* || $IGNORE = *all* ]]; then
 	log::info "skipping shellcheck"
 else
 	log::info "starting shellcheck"

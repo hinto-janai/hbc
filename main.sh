@@ -2,10 +2,12 @@
 #include <stdlib/const.sh>
 #include <stdlib/log.sh>
 #include <stdlib/trace.sh>
+#include <stdlib/debug.sh>
 
 hbc() {
 #-------------------------------------------------------------------------------- HBC OPTIONS
 ___BEGIN___ERROR___TRACE___
+debug
 # HELP OPTION
 if [[ $* = *"-h"* || $* = *"--help"* ]]; then
 printf "${BWHITE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s\n\n" "USAGE: " "hbc " "--OPTION " "<ARGUMENT>"
@@ -249,7 +251,7 @@ log::debug "RUN     | $RUN"
 log::debug "SOURCE  | $SOURCE"
 log::debug "TEST    | $TEST"
 if [[ $DIRECTORY_IS_LIB = true ]]; then
-	log::debug "library detected, not adding safety headers!"
+	log::warn "library detected, not adding safety headers!"
 fi
 
 # OUT ALREADY EXISTS WARNING
@@ -581,7 +583,7 @@ log::info "700 permissions"
 chmod 700 "${OUTPUT}"
 
 # SHELLCHECK
-if [[ $IGNORE != *ALL* || $IGNORE != *all* ]]; then
+if [[ $IGNORE = *ALL* || $IGNORE = *all* ]]; then
 	log::info "skipping shellcheck"
 else
 	log::info "starting shellcheck"
