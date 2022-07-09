@@ -22,14 +22,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/fa4e3fa>
-#nix <1657324449>
-#hbc <fa4e3fa>
-#lib <stdlib/ask.sh/35457d9>
-#lib <stdlib/const.sh/35457d9>
-#lib <stdlib/debug.sh/35457d9>
-#lib <stdlib/log.sh/35457d9>
-#lib <stdlib/trace.sh/35457d9>
+#git <hbc/8d9a1fb>
+#nix <1657328262>
+#hbc <8d9a1fb>
+#lib <stdlib/ask.sh/a091726>
+#lib <stdlib/const.sh/a091726>
+#lib <stdlib/debug.sh/a091726>
+#lib <stdlib/log.sh/a091726>
+#lib <stdlib/trace.sh/a091726>
 
 #-------------------------------------------------------------------------------- BEGIN SAFETY
 POSIXLY_CORRECT= || exit 90
@@ -362,7 +362,7 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 July 08 - fa4e3fa59b4acd8abd0d0adb74c75f55f3a8ebc1"
+	printf "%s\n" "2022 July 08 - 8d9a1fb1d3ab60894d972ac2e26c70e7d79401fd"
 	exit 3
 fi
 
@@ -932,8 +932,8 @@ fi
 
 # FINAL
 log::ok "$OUTPUT"
+[[ $QUIET = true ]] && exec 3>&1 &>/dev/stdout
 ___ENDOF___ERROR___TRACE___
-return 0
 }
 # EXECUTE
 hbc $@
@@ -941,11 +941,8 @@ if [[ $? = 0 && $RUN = true ]]; then
 	if [[ $TEST = true ]]; then
 		log::debug "beginning --test"
 		trap 'trap - EXIT; rm -rf "$TMP_DIR"' EXIT
-		bash "$OUTPUT" >&3
+		bash "$OUTPUT"
 		exit $?
-	elif [[ $QUIET = true ]]; then
-		log::debug "beginning --run --quiet"
-		exec ./"$OUTPUT" >&3
 	else
 		log::debug "beginning --run"
 		exec ./"$OUTPUT"

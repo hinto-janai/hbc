@@ -610,8 +610,8 @@ fi
 
 # FINAL
 log::ok "$OUTPUT"
+[[ $QUIET = true ]] && exec &>/dev/tty
 ___ENDOF___ERROR___TRACE___
-return 0
 }
 # EXECUTE
 hbc $@
@@ -619,11 +619,8 @@ if [[ $? = 0 && $RUN = true ]]; then
 	if [[ $TEST = true ]]; then
 		log::debug "beginning --test"
 		trap 'trap - EXIT; rm -rf "$TMP_DIR"' EXIT
-		bash "$OUTPUT" >&3
+		bash "$OUTPUT"
 		exit $?
-	elif [[ $QUIET = true ]]; then
-		log::debug "beginning --run --quiet"
-		exec ./"$OUTPUT" >&3
 	else
 		log::debug "beginning --run"
 		exec ./"$OUTPUT"
