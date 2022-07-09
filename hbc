@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/8d9a1fb>
-#nix <1657328262>
-#hbc <8d9a1fb>
+#git <hbc/35180cf>
+#nix <1657328389>
+#hbc <35180cf>
 #lib <stdlib/ask.sh/a091726>
 #lib <stdlib/const.sh/a091726>
 #lib <stdlib/debug.sh/a091726>
@@ -362,7 +362,7 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 July 08 - 8d9a1fb1d3ab60894d972ac2e26c70e7d79401fd"
+	printf "%s\n" "2022 July 08 - 35180cf54ca90557d2961ded314c27d4c2f9162b"
 	exit 3
 fi
 
@@ -932,7 +932,7 @@ fi
 
 # FINAL
 log::ok "$OUTPUT"
-[[ $QUIET = true ]] && exec 3>&1 &>/dev/stdout
+[[ $QUIET = true ]] && exec &>/dev/tty
 ___ENDOF___ERROR___TRACE___
 }
 # EXECUTE

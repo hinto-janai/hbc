@@ -584,7 +584,7 @@ chmod 700 "${OUTPUT}"
 
 # SHELLCHECK
 if [[ $IGNORE = *ALL* || $IGNORE = *all* ]]; then
-	log::info "skipping shellcheck"
+	log::warn "skipping shellcheck"
 else
 	log::info "starting shellcheck"
 	if [[ $QUIET = true ]]; then
