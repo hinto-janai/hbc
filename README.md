@@ -55,7 +55,7 @@ hbc includes some useful information at the beginning of compiled scripts. This 
 ### Safety
 hbc aggressively wraps included library and source code within safety code to make sure IF a lib/src function is declared, it WILL be declared for the entire duration of the script and be readonly. There are many other gotchas when running a Bash script in an unknown environment, not so much a problem with your own scripts, but this becomes an issue when developing scripts other's will use. hbc takes care of this by including some, quite frankly, paranoid safety measure to make sure the GNU-core-utils and Bash builtins aren't tampered with.
 
-Since this is all done with Bash builtins, this adds 0 runtime delay. Including many lib/src files does not slow anything either, as function declarations are lightning fast.
+Since this is all done with Bash builtins, this adds 0 runtime delay. Including many lib/src files does not slow anything down either, as function declarations are lightning fast.
 
 ### Diagrams
 
