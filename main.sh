@@ -223,7 +223,7 @@ elif [[ -z $OUTPUT ]]; then
 	OUTPUT="${DIRECTORY_NAME}.sh"
 fi
 case $DIRECTORY_NAME in
-	*lib|lib*|*Lib|Lib*|*LIB|LIB*)
+	*lib|*lib.sh|lib*|*Lib|*Lib.sh|Lib*|*LIB|*LIB.sh|LIB*)
 		DIRECTORY_IS_LIB=true
 		;;
 esac
