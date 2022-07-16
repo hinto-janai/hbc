@@ -1,0 +1,188 @@
+#!/usr/bin/env bash
+#git <tag.sh/5a42208>
+#nix <1657996374>
+#hbc <808713c>
+#lib <stdlib/readonly.sh/1eaba1f>
+#lib <stdlib/trace.sh/1eaba1f>
+
+#-------------------------------------------------------------------------------- BEGIN SAFETY
+POSIXLY_CORRECT= || exit 90
+	# bash builtins
+\unset -f . : [ alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
+	# gnu core-utils
+\unset -f arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 92
+\unalias -a || exit 93
+unset POSIXLY_CORRECT || exit 94
+set -eo pipefail || exit 95
+
+#-------------------------------------------------------------------------------- BEGIN LIB
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
+readonly BLACK="\e[0;30m"
+readonly RED="\e[0;31m"
+readonly GREEN="\e[0;32m"
+readonly YELLOW="\e[0;33m"
+readonly BLUE="\e[0;34m"
+readonly PURPLE="\e[0;35m"
+readonly CYAN="\e[0;36m"
+readonly WHITE="\e[0;37m"
+readonly BBLACK="\e[1;90m"
+readonly BRED="\e[1;91m"
+readonly BGREEN="\e[1;92m"
+readonly BYELLOW="\e[1;93m"
+readonly BBLUE="\e[1;94m"
+readonly BPURPLE="\e[1;95m"
+readonly BCYAN="\e[1;96m"
+readonly BWHITE="\e[1;97m"
+readonly UBLACK="\e[4;30m"
+readonly URED="\e[4;31m"
+readonly UGREEN="\e[4;32m"
+readonly UYELLOW="\e[4;33m"
+readonly UBLUE="\e[4;34m"
+readonly UPURPLE="\e[4;35m"
+readonly UCYAN="\e[4;36m"
+readonly UWHITE="\e[4;37m"
+readonly IBLACK="\e[0;90m"
+readonly IRED="\e[0;91m"
+readonly IGREEN="\e[0;92m"
+readonly IYELLOW="\e[0;93m"
+readonly IBLUE="\e[0;94m"
+readonly IPURPLE="\e[0;95m"
+readonly ICYAN="\e[0;96m"
+readonly IWHITE="\e[0;97m"
+readonly BOLD="\e[1m"
+readonly ITALIC="\e[3m"
+readonly OFF="\e[0m"
+___BEGIN___ERROR___TRACE___() {
+	POSIXLY_CORRECT= || exit 8
+	\unset -f : true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 9
+	\unalias -a || exit 10
+	unset -v POSIXLY_CORRECT || exit 11
+	trap 'STD_TRACE_CMD="$BASH_COMMAND" STD_TRACE_FUNC=(${BASH_LINENO[@]}) STD_TRACE_CMD_NUM="$LINENO" STD_TRACE_PIPE=(${PIPESTATUS[@]}); ___ENDOF___ERROR___TRACE___ > /dev/tty || exit 100' ERR || exit 12
+	unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 13
+	set -E -e -o pipefail || exit 14
+	return 0
+}
+___ENDOF___ERROR___TRACE___() {
+	POSIXLY_CORRECT= || exit 15
+	\unset -f : true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 16
+	\unalias -a || exit 17
+	unset -v POSIXLY_CORRECT || exit 18
+	if [[ -z $STD_TRACE_PIPE ]]; then
+		POSIXLY_CORRECT= || exit 19
+		\unset -f trap set return exit return || exit 20
+		\unalias -a || exit 21
+		unset POSIXLY_CORRECT || exit 22
+		unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 23
+		set +E +eo pipefail || exit 24
+		trap - ERR || exit 25
+		return 0
+	fi
+	printf "\e[1;91m%s\n" "========  BEGIN ERROR TRACE  ========"
+	printf "\e[1;95m%s\e[0m%s\n" "[bash] " "$BASH_VERSION"
+	printf "\e[1;96m%s\e[0m%s\n" "[unix] " "$EPOCHSECONDS"
+	printf "\e[1;91m%s" "[code] "
+	for i in "${STD_TRACE_PIPE[@]}"; do
+		printf "\e[0m%s" "$i"
+	done
+	printf "\n\e[1;97m%s\e[0m%s\n" "[file] " "${BASH_SOURCE[-1]}"
+	printf "\e[1;94m%s\e[0m%s\n" "[ wd ] " "$PWD"
+	printf "\e[1;93m%s\e[0m%s\n" "[ \$_ ] " "${STD_TRACE_CMD_NUM}: $STD_TRACE_CMD"
+	local f
+	local i=1
+	for f in "${STD_TRACE_FUNC[@]}"; do
+		[[ $f = 0 ]] && break
+		printf "\e[1;92m%s\e[0m%s\n" "[func] " "${f}: ${FUNCNAME[${i}]}()"
+		((i++))
+	done
+	local STD_TRACE_LINE_ARRAY
+	local STD_ORIGINAL_LINE="$STD_TRACE_CMD_NUM"
+	if [[ $STD_TRACE_CMD_NUM -lt 5 ]]; then
+		local STD_TRACE_CMD_NUM=1
+		mapfile -n 9 STD_TRACE_LINE_ARRAY < "$0"
+	else
+		local STD_TRACE_CMD_NUM=$((STD_TRACE_CMD_NUM-4))
+		mapfile -s $((STD_TRACE_CMD_NUM-1)) -n 9 STD_TRACE_LINE_ARRAY < "$0"
+	fi
+	for i in {0..8}; do
+		[[ ${STD_TRACE_LINE_ARRAY[$i]} ]] || break
+	  local STD_TRACE_SPACING="    "
+		if [[ $STD_TRACE_CMD_NUM = "$STD_ORIGINAL_LINE" ]]; then
+			case ${#STD_TRACE_CMD_NUM} in
+				1) printf "\e[1;97m%s" "     $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				2) printf "\e[1;97m%s" "    $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				3) printf "\e[1;97m%s" "   $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				4) printf "\e[1;97m%s" "  $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				5) printf "\e[1;97m%s" " $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				*) printf "\e[1;97m%s" "$STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+			esac
+		else
+			case ${#STD_TRACE_CMD_NUM} in
+				1) printf "\e[1;90m%s" "     $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				2) printf "\e[1;90m%s" "    $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				3) printf "\e[1;90m%s" "   $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				4) printf "\e[1;90m%s" "  $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				5) printf "\e[1;90m%s" " $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				*) printf "\e[1;90m%s" "$STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+			esac
+		fi
+		((STD_TRACE_CMD_NUM++))
+	done
+	[[ $STD_TRACE_RETURN ]] && printf "\e[38;5;196m%s\e[0;1m%s\e[0m\n" "[STD_TRACE_RETURN]" " $STD_TRACE_RETURN"
+	printf "\e[1;91m%s\e[0m\n" "========  ENDOF ERROR TRACE  ========"
+	unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 26
+	set +E +eo pipefail || exit 27
+	trap - ERR || exit 28
+	if [[ $BASH_SUBSHELL != 0 ]]; then
+		printf "\e[1;93m%s\e[0m\n" "======  SUB-SHELLS TERMINATED  ======"
+	fi
+	builtin kill -s TERM 0 "$(jobs -p)"
+	exit 99
+	printf "\e[1;97m%s\e[0m\n" "=KILL/EXIT FAIL, BEGIN INFINITE LOOP="
+	while :; do read -s -r; done
+	while true; do read -s -r; done
+	while true; do false; done
+	while :; do :; done
+}
+declare -fr ___BEGIN___ERROR___TRACE___
+declare -fr ___ENDOF___ERROR___TRACE___
+trap - ERR || exit 117
+set +eo pipefail || exit 118
+
+#-------------------------------------------------------------------------------- BEGIN MAIN
+tag(){
+___BEGIN___ERROR___TRACE___
+# CHECK IF IN /SRC/
+local DIRECTORY
+DIRECTORY=$(basename "$PWD")
+[[ $DIRECTORY = src ]]
+
+# CHECK IF IN GIT
+git status &>/dev/null
+
+# GET VARIABLES
+cd ..
+local DIRECTORY_NAME
+DIRECTORY_NAME=$(basename "$PWD")
+cd src
+
+local GIT_HASH
+GIT_HASH=$(git rev-parse --short HEAD)
+
+# LOOP THROUGH .SH FILES
+for i in $(find *.sh); do
+	if grep -m1 "^#git <.*>[[:blank:]]*$" "$i" &>/dev/null; then
+		sed -i "0,/^#git <.*>[[:blank:]]*$/s//#git <$DIRECTORY_NAME\/$i\/$GIT_HASH>/" "$i" &>/dev/null
+		printf "${BGREEN}[REPLACE] ${OFF}%s\n" "$i"
+	else
+		sed -i "1i #git <$DIRECTORY_NAME\/$i\/$GIT_HASH>" "$i" &>/dev/null
+		printf "${BGREEN}[  ADD  ] ${OFF}%s\n" "$i"
+	fi
+done
+
+# FINISH
+___ENDOF___ERROR___TRACE___
+echo "tag done"
+exit 0
+}
+tag
+#-------------------------------------------------------------------------------- ENDOF MAIN

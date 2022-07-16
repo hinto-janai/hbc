@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+[[ $# -eq 0 ]] && exit 5
+for i in $@; do
+	date -d @$(grep -m1 "#nix <.*>$" "$i" | tr -d '#nix<> ')
+done

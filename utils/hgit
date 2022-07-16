@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+grep -om1 "#git <.*>" "$@" | cut -d' ' -f2
