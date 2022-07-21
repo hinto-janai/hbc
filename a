@@ -1,9 +1,361 @@
-#include <stdlib/ask.sh>
-#include <stdlib/log.sh>
-#include <stdlib/trace.sh>
-#include <stdlib/debug.sh>
-#include <stdlib/readonly.sh>
+#!/usr/bin/env bash
+#
+# hbc - hinto's bash compiler
+#
+# Copyright (c) 2022 hinto-janaiyo <https://github.com/hinto-janaiyo>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
+#git <hbc/d4496ab>
+#nix <1658365562>
+#hbc <d4496ab>
+#lib <stdlib/ask.sh/1eaba1f>
+#lib <stdlib/const.sh/1eaba1f>
+#lib <stdlib/debug.sh/1eaba1f>
+#lib <stdlib/log.sh/1eaba1f>
+#lib <stdlib/trace.sh/1eaba1f>
+
+#-------------------------------------------------------------------------------- BEGIN SAFETY
+POSIXLY_CORRECT= || exit 90
+	# bash builtins
+\unset -f . : [ alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
+	# gnu core-utils
+\unset -f arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 92
+\unalias -a || exit 93
+unset POSIXLY_CORRECT || exit 94
+set -eo pipefail || exit 95
+
+#-------------------------------------------------------------------------------- BEGIN LIB
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
+ask::yes() {
+	local STD_ASK_REPONSE || return 44
+	read -r STD_ASK_REPONSE
+	case $STD_ASK_REPONSE in
+		""|y|Y|yes|Yes|YES) return 0 ;;
+		*) return 2 ;;
+	esac
+}
+ask::no() {
+	local STD_ASK_RESPONSE || return 44
+	read -r STD_ASK_RESPONSE
+	case $STD_ASK_RESPONSE in
+		y|Y|yes|Yes|YES) return 2 ;;
+		*) return 0 ;;
+	esac
+}
+ask::sudo() {
+	sudo -v
+}
+const::char() {
+	[[ $# = 0 ]] && return 11
+	local i || return 22
+	for i in "$@"; do
+		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="char not found: $i"; return 33; }
+		declare -r -g "$i" || return 44
+	done
+	return 0
+}
+const::array() {
+	[[ $# = 0 ]] && return 11
+	local i || return 22
+	for i in "$@"; do
+		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="array not found: $i"; return 33; }
+		declare -r -g -a "$i" || return 44
+	done
+	return 0
+}
+const::map() {
+	[[ $# = 0 ]] && return 11
+	local i || return 22
+	for i in "$@"; do
+		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="map not found: $i"; return 33; }
+		declare -r -g -A "$i" || return 44
+	done
+	return 0
+}
+const::int() {
+	[[ $# = 0 ]] && return 11
+	local i || return 22
+	for i in "$@"; do
+		case "$i" in
+			''|*[!0-9]*) { STD_TRACE_RETURN="not integer: $i"; return 33; } ;;
+		esac
+		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="integer not found: $i"; return 44; }
+		declare -r -g -i "$i" || return 55
+	done
+	return 0
+}
+const::bool() {
+	[[ $# = 0 ]] && return 11
+	local i || return 22
+	for i in "$@"; do
+		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="bool not found: $i"; return 33; }
+		declare -r -g "$i" || return 44
+	done
+}
+const::ref() {
+	[[ $# = 0 ]] && return 11
+	local i || return 22
+	for i in "$@"; do
+		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="ref not found: $i"; return 33; }
+		declare -r -g -n "$i" || return 44
+	done
+	return 0
+}
+debug() {
+	[[ $STD_DEBUG != true ]] && return 0
+	trap 'STD_DEBUG_CMD="$BASH_COMMAND" STD_DEBUG_FUNC=(${BASH_LINENO[@]}) STD_DEBUG_CMD_NUM="$LINENO" STD_DEBUG_PIPE=(${PIPESTATUS[@]});debug::trap' DEBUG
+}
+debug::trap() {
+	if [[ -z $STD_DEBUG_INIT ]]; then
+		declare -g STD_DEBUG_INIT
+		STD_DEBUG_INIT=${EPOCHREALTIME//./}
+		printf "\r\e[2K\033[1;90m%s\033[1;93m%s\033[0m%s\033[1;93m%s" \
+			"[debug 0.000000] " "[ \$_ ] " "${STD_DEBUG_CMD_NUM}: $STD_DEBUG_CMD " "-> "
+		local f
+		local i=1
+		for f in ${STD_DEBUG_FUNC[@]-1}; do
+			[[ $f = 0 ]] && break
+			printf "\033[1;91m%s\033[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
+			((i++))
+		done
+		printf "\033[0m\n"
+		return
+	fi
+	local STD_DEBUG_ADJUSTED STD_DEBUG_DOT
+	STD_DEBUG_ADJUSTED=$((${EPOCHREALTIME//./}-STD_DEBUG_INIT))
+	case ${#STD_DEBUG_ADJUSTED} in
+		1) STD_DEBUG_ADJUSTED=00000${STD_DEBUG_ADJUSTED//$'\n'};;
+		2) STD_DEBUG_ADJUSTED=0000${STD_DEBUG_ADJUSTED//$'\n'};;
+		3) STD_DEBUG_ADJUSTED=000${STD_DEBUG_ADJUSTED//$'\n'};;
+		4) STD_DEBUG_ADJUSTED=00${STD_DEBUG_ADJUSTED//$'\n'};;
+		5) STD_DEBUG_ADJUSTED=0${STD_DEBUG_ADJUSTED//$'\n'};;
+	esac
+	STD_DEBUG_DOT=$((${#STD_DEBUG_ADJUSTED}-6))
+	if [[ $STD_DEBUG_DOT -eq 0 ]]; then
+		printf "\r\e[2K\033[1;90m%s\033[1;93m%s\033[0m%s\033[1;93m%s" \
+			"[debug 0.${STD_DEBUG_ADJUSTED}] " "[ \$_ ] " "${STD_DEBUG_CMD_NUM}: $STD_DEBUG_CMD " "-> "
+	else
+		printf "\r\e[2K\033[1;90m%s\033[1;93m%s\033[0m%s\033[1;93m%s" \
+			"[debug ${STD_DEBUG_ADJUSTED:0:${STD_DEBUG_DOT}}.${STD_DEBUG_ADJUSTED:${STD_DEBUG_DOT}}] " \
+			"[ \$_ ] " "${STD_DEBUG_CMD_NUM}: $STD_DEBUG_CMD " "-> "
+	fi
+	local f
+	local i=1
+	for f in ${STD_DEBUG_FUNC[@]-1}; do
+		[[ $f = 0 ]] && break
+		printf "\033[1;91m%s\033[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
+		((i++))
+	done
+	printf "\033[0m\n"
+}
+log::ok() {
+	printf "\r\e[2K"
+	printf "\r\e[1;32m[  OK  ]\e[0m %s\n" "$@"
+}
+log::info() {
+	printf "\r\e[2K"
+	printf "\r\e[1;37m[ INFO ]\e[0m %s\n" "$@"
+}
+log::warn() {
+	printf "\r\e[2K"
+	printf "\r\e[1;33m[ WARN ]\e[0m %s\n" "$@"
+}
+log::fail() {
+	printf "\r\e[2K"
+	printf "\r\e[1;31m[ FAIL ]\e[0m %s\n" "$@"
+}
+log::danger() {
+	printf "\r\e[2K"
+	printf "\r\e[1;31m[DANGER]\e[0m %s\n" "$@"
+}
+log::tab() {
+	printf "\r\e[2K"
+	printf "\r\e[0m         %s\n" "$@"
+}
+log::prog() {
+	printf "\r\e[2K"
+	printf "\r\e[1;37m[ \e[0m....\e[1;37m ]\e[0m %s " "$@"
+}
+log::debug() {
+	[[ $STD_LOG_DEBUG != true ]] && return 0
+	if [[ -z $STD_LOG_DEBUG_INIT ]]; then
+		declare -g STD_LOG_DEBUG_INIT
+		STD_LOG_DEBUG_INIT=${EPOCHREALTIME//./}
+		printf "\r\e[2K\e[1;90m%s\e[0m%s" "[log::debug 0.000000] " "$* "
+		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
+			printf "\e[1;93m%s" "-> "
+			local f i
+			i=1
+			for f in ${BASH_LINENO[@]}; do
+				[[ $f = 0 ]] && break
+				printf "\e[1;91m%s\e[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
+				((i++))
+			done
+		fi
+		printf "\e[0m\n"
+		return
+	fi
+	local STD_LOG_DEBUG_ADJUSTED STD_LOG_DEBUG_DOT
+	STD_LOG_DEBUG_ADJUSTED=$((${EPOCHREALTIME//./}-STD_LOG_DEBUG_INIT))
+	case ${#STD_LOG_DEBUG_ADJUSTED} in
+		1) STD_LOG_DEBUG_ADJUSTED=00000${STD_LOG_DEBUG_ADJUSTED};;
+		2) STD_LOG_DEBUG_ADJUSTED=0000${STD_LOG_DEBUG_ADJUSTED};;
+		3) STD_LOG_DEBUG_ADJUSTED=000${STD_LOG_DEBUG_ADJUSTED};;
+		4) STD_LOG_DEBUG_ADJUSTED=00${STD_LOG_DEBUG_ADJUSTED};;
+		5) STD_LOG_DEBUG_ADJUSTED=0${STD_LOG_DEBUG_ADJUSTED};;
+	esac
+	STD_LOG_DEBUG_DOT=$((${#STD_LOG_DEBUG_ADJUSTED}-6))
+	if [[ $STD_LOG_DEBUG_DOT -eq 0 ]]; then
+		printf "\r\e[2K\e[1;90m%s\e[0m%s" "[log::debug 0.${STD_LOG_DEBUG_ADJUSTED}] " "$* "
+	else
+		printf "\r\e[2K\e[1;90m%s\e[0m%s" \
+			"[log::debug ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] " "$* "
+	fi
+	if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
+		printf "\e[1;93m%s" "-> "
+		local f i
+		i=1
+		for f in ${BASH_LINENO[@]}; do
+			[[ $f = 0 ]] && break
+			printf "\e[1;91m%s\e[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
+			((i++))
+		done
+	fi
+	printf "\e[0m\n"
+}
+___BEGIN___ERROR___TRACE___() {
+	POSIXLY_CORRECT= || exit 8
+	\unset -f : true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 9
+	\unalias -a || exit 10
+	unset -v POSIXLY_CORRECT || exit 11
+	trap 'STD_TRACE_CMD="$BASH_COMMAND" STD_TRACE_FUNC=(${BASH_LINENO[@]}) STD_TRACE_CMD_NUM="$LINENO" STD_TRACE_PIPE=(${PIPESTATUS[@]}); ___ENDOF___ERROR___TRACE___ > /dev/tty || exit 100' ERR || exit 12
+	unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 13
+	set -E -e -o pipefail || exit 14
+	return 0
+}
+___ENDOF___ERROR___TRACE___() {
+	POSIXLY_CORRECT= || exit 15
+	\unset -f : true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 16
+	\unalias -a || exit 17
+	unset -v POSIXLY_CORRECT || exit 18
+	if [[ -z $STD_TRACE_PIPE ]]; then
+		POSIXLY_CORRECT= || exit 19
+		\unset -f trap set return exit return || exit 20
+		\unalias -a || exit 21
+		unset POSIXLY_CORRECT || exit 22
+		unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 23
+		set +E +eo pipefail || exit 24
+		trap - ERR || exit 25
+		return 0
+	fi
+	printf "\e[1;91m%s\n" "========  BEGIN ERROR TRACE  ========"
+	printf "\e[1;95m%s\e[0m%s\n" "[bash] " "$BASH_VERSION"
+	printf "\e[1;96m%s\e[0m%s\n" "[unix] " "$EPOCHSECONDS"
+	printf "\e[1;91m%s" "[code] "
+	for i in "${STD_TRACE_PIPE[@]}"; do
+		printf "\e[0m%s" "$i"
+	done
+	printf "\n\e[1;97m%s\e[0m%s\n" "[file] " "${BASH_SOURCE[-1]}"
+	printf "\e[1;94m%s\e[0m%s\n" "[ wd ] " "$PWD"
+	printf "\e[1;93m%s\e[0m%s\n" "[ \$_ ] " "${STD_TRACE_CMD_NUM}: $STD_TRACE_CMD"
+	local f
+	local i=1
+	for f in "${STD_TRACE_FUNC[@]}"; do
+		[[ $f = 0 ]] && break
+		printf "\e[1;92m%s\e[0m%s\n" "[func] " "${f}: ${FUNCNAME[${i}]}()"
+		((i++))
+	done
+	local STD_TRACE_LINE_ARRAY
+	local STD_ORIGINAL_LINE="$STD_TRACE_CMD_NUM"
+	if [[ $STD_TRACE_CMD_NUM -lt 5 ]]; then
+		local STD_TRACE_CMD_NUM=1
+		mapfile -n 9 STD_TRACE_LINE_ARRAY < "$0"
+	else
+		local STD_TRACE_CMD_NUM=$((STD_TRACE_CMD_NUM-4))
+		mapfile -s $((STD_TRACE_CMD_NUM-1)) -n 9 STD_TRACE_LINE_ARRAY < "$0"
+	fi
+	for i in {0..8}; do
+		[[ ${STD_TRACE_LINE_ARRAY[$i]} ]] || break
+	  local STD_TRACE_SPACING="    "
+		if [[ $STD_TRACE_CMD_NUM = "$STD_ORIGINAL_LINE" ]]; then
+			case ${#STD_TRACE_CMD_NUM} in
+				1) printf "\e[1;97m%s" "     $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				2) printf "\e[1;97m%s" "    $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				3) printf "\e[1;97m%s" "   $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				4) printf "\e[1;97m%s" "  $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				5) printf "\e[1;97m%s" " $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				*) printf "\e[1;97m%s" "$STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+			esac
+		else
+			case ${#STD_TRACE_CMD_NUM} in
+				1) printf "\e[1;90m%s" "     $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				2) printf "\e[1;90m%s" "    $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				3) printf "\e[1;90m%s" "   $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				4) printf "\e[1;90m%s" "  $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				5) printf "\e[1;90m%s" " $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+				*) printf "\e[1;90m%s" "$STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
+			esac
+		fi
+		((STD_TRACE_CMD_NUM++))
+	done
+	[[ $STD_TRACE_RETURN ]] && printf "\e[38;5;196m%s\e[0;1m%s\e[0m\n" "[STD_TRACE_RETURN]" " $STD_TRACE_RETURN"
+	printf "\e[1;91m%s\e[0m\n" "========  ENDOF ERROR TRACE  ========"
+	unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 26
+	set +E +eo pipefail || exit 27
+	trap - ERR || exit 28
+	if [[ $BASH_SUBSHELL != 0 ]]; then
+		printf "\e[1;93m%s\e[0m\n" "======  SUB-SHELLS TERMINATED  ======"
+	fi
+	builtin kill -s TERM 0 "$(jobs -p)"
+	exit 99
+	printf "\e[1;97m%s\e[0m\n" "=KILL/EXIT FAIL, BEGIN INFINITE LOOP="
+	while :; do read -s -r; done
+	while true; do read -s -r; done
+	while true; do false; done
+	while :; do :; done
+}
+declare -fr ask::yes
+declare -fr ask::no
+declare -fr ask::sudo
+declare -fr const::char
+declare -fr const::array
+declare -fr const::map
+declare -fr const::int
+declare -fr const::bool
+declare -fr const::ref
+declare -fr debug
+declare -fr debug::trap
+declare -fr log::ok
+declare -fr log::info
+declare -fr log::warn
+declare -fr log::fail
+declare -fr log::danger
+declare -fr log::tab
+declare -fr log::prog
+declare -fr log::debug
+declare -fr ___BEGIN___ERROR___TRACE___
+declare -fr ___ENDOF___ERROR___TRACE___
+trap - ERR || exit 117
+set +eo pipefail || exit 118
+
+#-------------------------------------------------------------------------------- BEGIN MAIN
 hbc() {
 #-------------------------------------------------------------------------------- HBC OPTIONS
 ___BEGIN___ERROR___TRACE___
@@ -40,7 +392,7 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	___TEMPORARY___LINE___MEANT___FOR___REPLACEMENT___
+	printf "%s\n" "2022 July 20 - d4496ab3fa5e05b3136c2e7439319a2628d166e0"
 	exit 3
 fi
 
@@ -505,14 +857,14 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 	# DECLARE -FR
 	log::tab "[lib::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	local FUNCTIONS_LIB
-	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z.:_-]\+(){\|^[0-9A-Za-z.:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
+	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
 		if [[ -z ${FUNCTIONS_LIB[0]} ]]; then
 			log::fail "no functions found"
 			exit 3
 		fi
 		local d
 		for d in ${FUNCTIONS_LIB[@]}; do
-			echo "declare -frg $d" >> "$OUTPUT"
+			echo "declare -fr $d" >> "$OUTPUT"
 		done
 	fi
 fi
@@ -532,14 +884,14 @@ if [[ $SRC_FILES ]]; then
 	if [[ $DIRECTORY_IS_LIB != true ]]; then
 		log::tab "[src::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 		local FUNCTIONS_SRC
-		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z.:_-]\+(){\|^[0-9A-Za-z.:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
+		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
 			if [[ -z ${FUNCTIONS_SRC[0]} ]]; then
 				log::fail "no functions found"
 				exit 3
 			fi
 			local d
 			for d in ${FUNCTIONS_SRC[@]}; do
-				echo "declare -frg $d" >> "$OUTPUT"
+				echo "declare -fr $d" >> "$OUTPUT"
 			done
 		fi
 	fi
@@ -628,4 +980,4 @@ if [[ $? = 0 && $RUN = true ]]; then
 fi
 log::debug "hbc done"
 exit 0
-
+#-------------------------------------------------------------------------------- ENDOF MAIN
