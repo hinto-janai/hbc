@@ -505,14 +505,14 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 	# DECLARE -FR
 	log::tab "[lib::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	local FUNCTIONS_LIB
-	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
+	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z.:_-]\+(){\|^[0-9A-Za-z.:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
 		if [[ -z ${FUNCTIONS_LIB[0]} ]]; then
 			log::fail "no functions found"
 			exit 3
 		fi
 		local d
 		for d in ${FUNCTIONS_LIB[@]}; do
-			echo "declare -fr $d" >> "$OUTPUT"
+			echo "declare -frg $d" >> "$OUTPUT"
 		done
 	fi
 fi
@@ -532,14 +532,14 @@ if [[ $SRC_FILES ]]; then
 	if [[ $DIRECTORY_IS_LIB != true ]]; then
 		log::tab "[src::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 		local FUNCTIONS_SRC
-		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
+		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z.:_-]\+(){\|^[0-9A-Za-z.:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
 			if [[ -z ${FUNCTIONS_SRC[0]} ]]; then
 				log::fail "no functions found"
 				exit 3
 			fi
 			local d
 			for d in ${FUNCTIONS_SRC[@]}; do
-				echo "declare -fr $d" >> "$OUTPUT"
+				echo "declare -frg $d" >> "$OUTPUT"
 			done
 		fi
 	fi
