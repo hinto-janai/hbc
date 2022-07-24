@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/5fdfdff>
-#nix <1658695936>
-#hbc <5fdfdff>
+#git <hbc/06b0e03>
+#nix <1658696297>
+#hbc <06b0e03>
 #lib <stdlib/ask.sh/1eaba1f>
 #lib <stdlib/debug.sh/1eaba1f>
 #lib <stdlib/log.sh/1eaba1f>
@@ -34,12 +34,13 @@
 #-------------------------------------------------------------------------------- BEGIN SAFETY
 POSIXLY_CORRECT= || exit 90
 	# bash builtins
-\unset -f . : [ alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
+\unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
 	# gnu core-utils
 \unset -f arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 92
 \unalias -a || exit 93
 unset POSIXLY_CORRECT || exit 94
-set -eo pipefail || exit 95
+unset -f . : [ || exit 95
+set -eo pipefail || exit 96
 
 #-------------------------------------------------------------------------------- BEGIN LIB
 trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
@@ -221,9 +222,10 @@ readonly ITALIC="\e[3m"
 readonly OFF="\e[0m"
 ___BEGIN___ERROR___TRACE___() {
 	POSIXLY_CORRECT= || exit 8
-	\unset -f : true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 9
+	\unset -f true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 9
 	\unalias -a || exit 10
 	unset -v POSIXLY_CORRECT || exit 11
+	unset -f : || exit 1
 	trap 'STD_TRACE_CMD="$BASH_COMMAND" STD_TRACE_FUNC=(${BASH_LINENO[@]}) STD_TRACE_CMD_NUM="$LINENO" STD_TRACE_PIPE=(${PIPESTATUS[@]}); ___ENDOF___ERROR___TRACE___ > /dev/tty || exit 100' ERR || exit 12
 	unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 13
 	set -E -e -o pipefail || exit 14
@@ -231,9 +233,10 @@ ___BEGIN___ERROR___TRACE___() {
 }
 ___ENDOF___ERROR___TRACE___() {
 	POSIXLY_CORRECT= || exit 15
-	\unset -f : true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 16
+	\unset -f true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 16
 	\unalias -a || exit 17
 	unset -v POSIXLY_CORRECT || exit 18
+	unset -f : || exit 1
 	if [[ -z $STD_TRACE_PIPE ]]; then
 		POSIXLY_CORRECT= || exit 19
 		\unset -f trap set return exit return || exit 20
@@ -365,7 +368,7 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 July 24 - 5fdfdff3a4773fa2428e19f4d1e461e2e75d1c07"
+	printf "%s\n" "2022 July 24 - 06b0e0333dd2fecbff284a0c364bf8f47194c0c0"
 	exit 3
 fi
 
@@ -653,7 +656,8 @@ POSIXLY_CORRECT= || exit 90
 \unset -f arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 92
 \unalias -a || exit 93
 unset POSIXLY_CORRECT || exit 94
-set -eo pipefail || exit 95
+unset -f . : [ || exit 95
+set -eo pipefail || exit 96
 EOM
 )
 # lib
