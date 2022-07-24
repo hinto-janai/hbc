@@ -22,13 +22,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/d4496ab>
-#nix <1658365559>
-#hbc <9210ec7>
+#git <hbc/5fdfdff>
+#nix <1658695936>
+#hbc <5fdfdff>
 #lib <stdlib/ask.sh/1eaba1f>
-#lib <stdlib/const.sh/1eaba1f>
 #lib <stdlib/debug.sh/1eaba1f>
 #lib <stdlib/log.sh/1eaba1f>
+#lib <stdlib/readonly.sh/1eaba1f>
 #lib <stdlib/trace.sh/1eaba1f>
 
 #-------------------------------------------------------------------------------- BEGIN SAFETY
@@ -61,62 +61,6 @@ ask::no() {
 }
 ask::sudo() {
 	sudo -v
-}
-const::char() {
-	[[ $# = 0 ]] && return 11
-	local i || return 22
-	for i in "$@"; do
-		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="char not found: $i"; return 33; }
-		declare -r -g "$i" || return 44
-	done
-	return 0
-}
-const::array() {
-	[[ $# = 0 ]] && return 11
-	local i || return 22
-	for i in "$@"; do
-		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="array not found: $i"; return 33; }
-		declare -r -g -a "$i" || return 44
-	done
-	return 0
-}
-const::map() {
-	[[ $# = 0 ]] && return 11
-	local i || return 22
-	for i in "$@"; do
-		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="map not found: $i"; return 33; }
-		declare -r -g -A "$i" || return 44
-	done
-	return 0
-}
-const::int() {
-	[[ $# = 0 ]] && return 11
-	local i || return 22
-	for i in "$@"; do
-		case "$i" in
-			''|*[!0-9]*) { STD_TRACE_RETURN="not integer: $i"; return 33; } ;;
-		esac
-		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="integer not found: $i"; return 44; }
-		declare -r -g -i "$i" || return 55
-	done
-	return 0
-}
-const::bool() {
-	[[ $# = 0 ]] && return 11
-	local i || return 22
-	for i in "$@"; do
-		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="bool not found: $i"; return 33; }
-		declare -r -g "$i" || return 44
-	done
-}
-const::ref() {
-	[[ $# = 0 ]] && return 11
-	local i || return 22
-	for i in "$@"; do
-		declare -p "$i" &>/dev/null || { STD_TRACE_RETURN="ref not found: $i"; return 33; }
-		declare -r -g -n "$i" || return 44
-	done
-	return 0
 }
 debug() {
 	[[ $STD_DEBUG != true ]] && return 0
@@ -240,6 +184,41 @@ log::debug() {
 	fi
 	printf "\e[0m\n"
 }
+readonly BLACK="\e[0;30m"
+readonly RED="\e[0;31m"
+readonly GREEN="\e[0;32m"
+readonly YELLOW="\e[0;33m"
+readonly BLUE="\e[0;34m"
+readonly PURPLE="\e[0;35m"
+readonly CYAN="\e[0;36m"
+readonly WHITE="\e[0;37m"
+readonly BBLACK="\e[1;90m"
+readonly BRED="\e[1;91m"
+readonly BGREEN="\e[1;92m"
+readonly BYELLOW="\e[1;93m"
+readonly BBLUE="\e[1;94m"
+readonly BPURPLE="\e[1;95m"
+readonly BCYAN="\e[1;96m"
+readonly BWHITE="\e[1;97m"
+readonly UBLACK="\e[4;30m"
+readonly URED="\e[4;31m"
+readonly UGREEN="\e[4;32m"
+readonly UYELLOW="\e[4;33m"
+readonly UBLUE="\e[4;34m"
+readonly UPURPLE="\e[4;35m"
+readonly UCYAN="\e[4;36m"
+readonly UWHITE="\e[4;37m"
+readonly IBLACK="\e[0;90m"
+readonly IRED="\e[0;91m"
+readonly IGREEN="\e[0;92m"
+readonly IYELLOW="\e[0;93m"
+readonly IBLUE="\e[0;94m"
+readonly IPURPLE="\e[0;95m"
+readonly ICYAN="\e[0;96m"
+readonly IWHITE="\e[0;97m"
+readonly BOLD="\e[1m"
+readonly ITALIC="\e[3m"
+readonly OFF="\e[0m"
 ___BEGIN___ERROR___TRACE___() {
 	POSIXLY_CORRECT= || exit 8
 	\unset -f : true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 9
@@ -323,7 +302,7 @@ ___ENDOF___ERROR___TRACE___() {
 	if [[ $BASH_SUBSHELL != 0 ]]; then
 		printf "\e[1;93m%s\e[0m\n" "======  SUB-SHELLS TERMINATED  ======"
 	fi
-	builtin kill -s TERM 0 "$(jobs -p)"
+	builtin kill -s TERM 0
 	exit 99
 	printf "\e[1;97m%s\e[0m\n" "=KILL/EXIT FAIL, BEGIN INFINITE LOOP="
 	while :; do read -s -r; done
@@ -334,12 +313,6 @@ ___ENDOF___ERROR___TRACE___() {
 declare -frg ask::yes
 declare -frg ask::no
 declare -frg ask::sudo
-declare -frg const::char
-declare -frg const::array
-declare -frg const::map
-declare -frg const::int
-declare -frg const::bool
-declare -frg const::ref
 declare -frg debug
 declare -frg debug::trap
 declare -frg log::ok
@@ -392,7 +365,7 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 July 20 - d4496ab3fa5e05b3136c2e7439319a2628d166e0"
+	printf "%s\n" "2022 July 24 - 5fdfdff3a4773fa2428e19f4d1e461e2e75d1c07"
 	exit 3
 fi
 
@@ -675,7 +648,7 @@ local SAFETY_HEADER
 SAFETY_HEADER=$(cat << 'EOM'
 POSIXLY_CORRECT= || exit 90
 	# bash builtins
-\unset -f . : [ alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
+\unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
 	# gnu core-utils
 \unset -f arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 92
 \unalias -a || exit 93
@@ -857,14 +830,14 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 	# DECLARE -FR
 	log::tab "[lib::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	local FUNCTIONS_LIB
-	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
+	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z.:_-]\+(){\|^[0-9A-Za-z.:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
 		if [[ -z ${FUNCTIONS_LIB[0]} ]]; then
 			log::fail "no functions found"
 			exit 3
 		fi
 		local d
 		for d in ${FUNCTIONS_LIB[@]}; do
-			echo "declare -fr $d" >> "$OUTPUT"
+			echo "declare -frg $d" >> "$OUTPUT"
 		done
 	fi
 fi
@@ -884,14 +857,14 @@ if [[ $SRC_FILES ]]; then
 	if [[ $DIRECTORY_IS_LIB != true ]]; then
 		log::tab "[src::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 		local FUNCTIONS_SRC
-		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z:_-]\+(){\|^[0-9A-Za-z:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
+		if FUNCTIONS_SRC=($(grep -ho "^[0-9A-Za-z.:_-]\+(){\|^[0-9A-Za-z.:_-]\+()[[:blank:]]\+{" "$TMP_SRC" | tr -d '(){ ')); then
 			if [[ -z ${FUNCTIONS_SRC[0]} ]]; then
 				log::fail "no functions found"
 				exit 3
 			fi
 			local d
 			for d in ${FUNCTIONS_SRC[@]}; do
-				echo "declare -fr $d" >> "$OUTPUT"
+				echo "declare -frg $d" >> "$OUTPUT"
 			done
 		fi
 	fi
