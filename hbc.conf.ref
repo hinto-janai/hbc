@@ -14,6 +14,11 @@ LICENSE=
 ## usage: <true> || <false>
 DELETE=
 
+## -f | --full
+## fully clean the output, including [main.sh]
+## usage: <true> || <false>
+FULL=
+
 ## -i | --ignore
 ## ignore shellcheck codes, formatting: [-i SC2154,SC2155]
 ## usage: SC2162,SC2162,[more_codes] || <ALL>

@@ -15,7 +15,8 @@ printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
 "    -a" " |" " --add" "     <text file>" "          add a text file (like a license) on top of output, default: [LICENSE]" \
 "    -c" " |" " --config" "  <hbc config file>" "    specify hbc config to use, default: [\$PWD/hbc.conf] or [/etc/hbc.conf]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${OFF}%s\n" \
-"    -d" " |" " --delete" "                       overwrite output file if it already exists"
+"    -d" " |" " --delete" "                       overwrite output file if it already exists" \
+"    -f" " |" " --full" "                         fully clean the output, including [main.sh]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
 "    -i" " |" " --ignore" "  <codes> or <ALL>" "     ignore shellcheck codes or disable shellcheck: [-i SC2154,SC2155] or [-i ALL]" \
 "    -l" " |" " --library" " <library directory>" "  specify where to look for lib code, default: [/usr/local/include]" \
@@ -45,7 +46,7 @@ elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 fi
 
 # UNSET ENVIRONMENT
-unset -v ADD OPTIONS CONFIG LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
 
 # PARSE CONFIG FILE (because directly sourcing is spooky)
 hbc_parse_config() {
@@ -53,22 +54,24 @@ hbc_parse_config() {
 	mapfile OPTIONS < $1 || return 2
 	for i in ${OPTIONS[@]}; do
 	    [[ $i =~ ^ADD=[[:alnum:]./_-]*$ ]]                   && declare -g LICENSE="${i/*=/}"
-	    [[ $i =~ ^DELETE=true[[:space:]]*$ ]]                && declare -g DELETE="true"
+	    [[ $i =~ ^DELETE=true[[:space:]]*$ ]]                && declare -g DELETE=true
+		[[ $i =~ ^FULL=true[[:space:]]*$ ]]                  && declare -g FULL=true
 		[[ $i =~ ^IGNORE=SC.*$ ]]                            && declare -g IGNORE=${i/*=/}
 		[[ $i =~ ^LIBRARY=[[:alnum:]./_-]*$ ]]               && declare -g LIBRARY="${i/*=/}"
 		[[ $i =~ ^MAIN=[[:alnum:]./_-]*$ ]]                  && declare -g MAIN="${i/*=/}"
 		[[ $i =~ ^OUTPUT=[[:alnum:]./_-]*$ ]]                && declare -g OUTPUT="${i/*=/}"
-	    [[ $i =~ ^QUIET=true[[:space:]]*$ ]]                 && declare -g QUIET="true"
-	    [[ $i =~ ^RUN=true[[:space:]]*$ ]]                   && declare -g RUN="true"
+	    [[ $i =~ ^QUIET=true[[:space:]]*$ ]]                 && declare -g QUIET=true
+	    [[ $i =~ ^RUN=true[[:space:]]*$ ]]                   && declare -g RUN=true
 		[[ $i =~ ^SOURCE=[[:alnum:]./_-]*$ ]]                && declare -g SOURCE="${i/*=/}"
-	    [[ $i =~ ^TEST=true[[:space:]]*$ ]]                  && declare -g TEST="true"
-	    [[ $i =~ ^STD_LOG_DEBUG=true[[:space:]]*$ ]]         && declare -g STD_LOG_DEBUG="true"
-	    [[ $i =~ ^STD_LOG_DEBUG_VERBOSE=true[[:space:]]*$ ]] && declare -g STD_LOG_DEBUG_VERBOSE="true"
+	    [[ $i =~ ^TEST=true[[:space:]]*$ ]]                  && declare -g TEST=true
+	    [[ $i =~ ^STD_LOG_DEBUG=true[[:space:]]*$ ]]         && declare -g STD_LOG_DEBUG=true
+	    [[ $i =~ ^STD_LOG_DEBUG_VERBOSE=true[[:space:]]*$ ]] && declare -g STD_LOG_DEBUG_VERBOSE=true
 	done
 	log::debug "=== hbc_parse_config ==="
 	log::debug "ADD     | $LICENSE"
 	log::debug "CONFIG  | $CONFIG"
 	log::debug "DELETE  | $DELETE"
+	log::debug "FULL    | $FULL"
 	log::debug "IGNORE  | $IGNORE"
 	log::debug "LIBRARY | $LIBRARY"
 	log::debug "MAIN    | $MAIN"
@@ -126,6 +129,7 @@ case $1 in
 		LICENSE="$1"; shift;;
 	-c | --config) shift; shift;;
 	-d | --delete) local DELETE=true; shift;;
+	-f | --full)   local FULL=true; shift;;
 	-i | --ignore)
 		shift
 		if [[ -z $1 ]]; then
@@ -293,6 +297,7 @@ local TMP_HEADER
 local TMP_SAFETY
 local TMP_LIB
 local TMP_SRC
+local TMP_MAIN
 local TMP_SCRATCH
 local VAR_SCRATCH
 local EXISTS_TMP
@@ -307,8 +312,9 @@ fi
 TMP_DIR="$(mktemp -d /tmp/hbc.XXXXXXXXXX)"
 TMP_HEADER="$(mktemp "$TMP_DIR"/header.XXXXXXXXX)"
 TMP_SAFETY="$(mktemp "$TMP_DIR"/safety.XXXXXXXXX)"
-TMP_LIB="$(mktemp "$TMP_DIR"/lib.XXXXXXX)"
-TMP_SRC="$(mktemp "$TMP_DIR"/src.XXXXXXX)"
+TMP_LIB="$(mktemp "$TMP_DIR"/lib.XXXXXXXXXX)"
+TMP_SRC="$(mktemp "$TMP_DIR"/src.XXXXXXXXXX)"
+TMP_MAIN="$(mktemp "$TMP_DIR"/main.XXXXXXXXXX)"
 TMP_SCRATCH="$(mktemp "$TMP_DIR"/scratch.XXXXXXXXXX)"
 # TEST OUTPUT
 if [[ $TEST = true ]]; then
@@ -427,6 +433,15 @@ if [[ $SRC_FILES ]]; then
 		echo "#src <${i/src\//}>" >> "$TMP_HEADER"
 	done
 fi
+#-------------------------------------------------------------------------------- MAIN
+# ADD MAIN TO TMP
+local EXISTS_MAIN
+EXISTS_MAIN=$(sed -e "/^#include <.*>$/d" -e '/./,$!d' "$MAIN")
+if [[ $EXISTS_MAIN ]]; then
+	printf "${BWHITE}%s${OFF}\n" "compiling [main] *****************"
+	log::tab "$MAIN"
+	echo "$EXISTS_MAIN" > "$TMP_MAIN"
+fi
 
 #-------------------------------------------------------------------------------- CLEANING
 printf "${BYELLOW}%s${OFF}\n" "cleaning *************************"
@@ -466,7 +481,7 @@ if [[ $SRC_FILES ]]; then
 		-i -e '/#!\/bin\/bash$/d' \
 		-i -e '/^$/d' "$TMP_SRC" \
 		-i -e '/^#/d' \
-		-i -e '/^[[:space:]]*#/d' "$TMP_LIB"
+		-i -e '/^[[:space:]]*#/d' "$TMP_SRC"
 	LINES_SRC[1]=$(wc -l "$TMP_SRC" | cut -d ' ' -f1)
 	log::tab "[src] sed  removed: $((LINES_SRC[0] - LINES_SRC[1]))"
 	if VAR_SCRATCH="$(grep -vxFf "$TMP_SCRATCH" "$TMP_SRC")"; then
@@ -475,6 +490,20 @@ if [[ $SRC_FILES ]]; then
 		log::tab "[src] grep removed: $((LINES_SRC[1] - LINES_SRC[2]))"
 	fi
 	log::tab "[src] ${LINES_SRC[0]} -> ${LINES_SRC[2]}"
+fi
+# MAIN
+if [[ $FULL = true ]]; then
+	local LINES_MAIN
+	LINES_MAIN[0]=$(wc -l "$TMP_MAIN" | cut -d ' ' -f1)
+	sed -i -e '/#!\/usr\/bin\/env bash$/d' \
+		-i -e '/#!\/usr\/bin\/bash$/d' \
+		-i -e '/#!\/bin\/bash$/d' \
+		-i -e '/^$/d' "$TMP_MAIN" \
+		-i -e '/^#/d' \
+		-i -e '/^[[:space:]]*#/d' "$TMP_MAIN"
+	LINES_MAIN[1]=$(wc -l "$TMP_MAIN" | cut -d ' ' -f1)
+	log::tab "[main] sed removed: $((LINES_MAIN[0] - LINES_MAIN[1]))"
+	log::tab "[main] ${LINES_MAIN[0]} -> ${LINES_MAIN[1]}"
 fi
 
 #-------------------------------------------------------------------------------- LINKING
@@ -553,14 +582,12 @@ if [[ $DIRECTORY_IS_LIB != true ]]; then
 fi
 
 # MAIN
-local EXISTS_MAIN
-EXISTS_MAIN=$(sed -e "/^#include <.*>$/d" -e '/./,$!d' "$MAIN")
 if [[ $EXISTS_MAIN ]]; then
 	echo >> "$OUTPUT"
 	log::tab "[main::header] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$HEADER_MAIN" >> "$OUTPUT"
 	log::tab "[main] -----------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
-	echo "$EXISTS_MAIN" >> "$OUTPUT"
+	cat "$TMP_MAIN" >> "$OUTPUT"
 	log::tab "[main::endof] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$ENDOF_MAIN" >> "$OUTPUT"
 
