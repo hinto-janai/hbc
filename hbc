@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/abcc149>
-#nix <1659731500>
-#hbc <48cdb60>
+#git <hbc/7f27eed>
+#nix <1659731971>
+#hbc <7f27eed>
 #lib <stdlib/ask.sh/8038e38>
 #lib <stdlib/debug.sh/8038e38>
 #lib <stdlib/log.sh/8038e38>
@@ -351,7 +351,7 @@ printf "${OFF}%s\n" \
 	"Copyright (c) 2022 hinto-janaiyo <https://github.com/hinto-janaiyo>"
 exit 2
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 August 05 - abcc149a3d73f3acba4b873c4125eb295daf007d"
+	printf "%s\n" "2022 August 05 | 1659731971 | 7f27eed51a6fd6e2a97be4cdf186bfbc58336667"
 	exit 3
 fi
 unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
@@ -799,7 +799,7 @@ if [[ $EXISTS_MAIN ]]; then
 	echo "$ENDOF_MAIN" >> "$OUTPUT"
 	if [[ $DIRECTORY_NAME = hbc ]]; then
 		local VERSION_LINE
-		VERSION_LINE="$(printf "%s\n" "$(date -d @$EPOCHSECONDS "+%Y %B %d") - $(git rev-parse HEAD 2>/dev/null)")"
+		VERSION_LINE="$(printf "%s\n" "$(date -d @$EPOCHSECONDS "+%Y %B %d") | $EPOCHSECONDS | $(git rev-parse HEAD 2>/dev/null)")"
 		VERSION_LINE='printf "%s\\n" '\""$VERSION_LINE"\"''
 		sed -i '0,/___TEMPORARY___LINE___MEANT___FOR___REPLACEMENT___/s//'"$VERSION_LINE"'/' $OUTPUT
 		log::tab "hbc version replacement"
