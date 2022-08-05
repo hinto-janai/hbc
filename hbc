@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/48cdb60>
-#nix <1659731380>
-#hbc <e35ca7a>
+#git <hbc/abcc149>
+#nix <1659731500>
+#hbc <48cdb60>
 #lib <stdlib/ask.sh/8038e38>
 #lib <stdlib/debug.sh/8038e38>
 #lib <stdlib/log.sh/8038e38>
@@ -351,7 +351,7 @@ printf "${OFF}%s\n" \
 	"Copyright (c) 2022 hinto-janaiyo <https://github.com/hinto-janaiyo>"
 exit 2
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 August 05 - 48cdb60df6c43cee219b7c5e82fefdb0629e86dd"
+	printf "%s\n" "2022 August 05 - abcc149a3d73f3acba4b873c4125eb295daf007d"
 	exit 3
 fi
 unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
@@ -811,20 +811,22 @@ chmod 700 "${OUTPUT}"
 if [[ $IGNORE = *ALL* || $IGNORE = *all* ]]; then
 	log::warn "skipping shellcheck"
 else
+	___ENDOF___ERROR___TRACE___
 	log::info "starting shellcheck"
 	if [[ $QUIET = true ]]; then
 		if [[ $IGNORE ]]; then
-			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE" >&3
+			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE" >&3 || exit
 		else
-			shellcheck "${OUTPUT}" --shell bash >&3
+			shellcheck "${OUTPUT}" --shell bash >&3 || exit
 		fi
 	else
 		if [[ $IGNORE ]]; then
-			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE"
+			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE" || exit
 		else
-			shellcheck "${OUTPUT}" --shell bash
+			shellcheck "${OUTPUT}" --shell bash || exit
 		fi
 	fi
+	___BEGIN___ERROR___TRACE___
 fi
 if [[ $TEST != true ]]; then
 	log::info "deleting $TMP_DIR"

@@ -614,20 +614,22 @@ chmod 700 "${OUTPUT}"
 if [[ $IGNORE = *ALL* || $IGNORE = *all* ]]; then
 	log::warn "skipping shellcheck"
 else
+	___ENDOF___ERROR___TRACE___
 	log::info "starting shellcheck"
 	if [[ $QUIET = true ]]; then
 		if [[ $IGNORE ]]; then
-			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE" >&3
+			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE" >&3 || exit
 		else
-			shellcheck "${OUTPUT}" --shell bash >&3
+			shellcheck "${OUTPUT}" --shell bash >&3 || exit
 		fi
 	else
 		if [[ $IGNORE ]]; then
-			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE"
+			shellcheck "${OUTPUT}" --shell bash -e "$IGNORE" || exit
 		else
-			shellcheck "${OUTPUT}" --shell bash
+			shellcheck "${OUTPUT}" --shell bash || exit
 		fi
 	fi
+	___BEGIN___ERROR___TRACE___
 fi
 
 # DELETE TMP_DIR
