@@ -22,14 +22,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/7f27eed>
-#nix <1659731971>
+#git <hbc/9f64be6>
+#nix <1661705200>
 #hbc <7f27eed>
-#lib <stdlib/ask.sh/8038e38>
-#lib <stdlib/debug.sh/8038e38>
-#lib <stdlib/log.sh/8038e38>
-#lib <stdlib/readonly.sh/8038e38>
-#lib <stdlib/trace.sh/8038e38>
+#lib <stdlib/ask.sh/93731ac>
+#lib <stdlib/debug.sh/93731ac>
+#lib <stdlib/log.sh/93731ac>
+#lib <stdlib/readonly.sh/93731ac>
+#lib <stdlib/trace.sh/93731ac>
 
 #-------------------------------------------------------------------------------- BEGIN SAFETY
 POSIXLY_CORRECT= || exit 90
@@ -130,9 +130,8 @@ log::debug() {
 		esac
 	fi
 	if [[ -z $STD_LOG_DEBUG_INIT ]]; then
-		declare -g STD_LOG_DEBUG_INIT
-		STD_LOG_DEBUG_INIT=${EPOCHREALTIME//[!0-9]/}
-		printf "\r\e[2K\e[1;90m%s${STD_LOG_DEBUG_FUNC_COLOR}%s\e[0m%s" "[log::debug 0.000000] " "${FUNCNAME[1]}() " "$* "
+		declare -gr STD_LOG_DEBUG_INIT=${EPOCHREALTIME//[!0-9]/}
+		printf "\r\e[2K\e[1;90m[%(%F %T)T 0.000000] ${STD_LOG_DEBUG_FUNC_COLOR}%s\e[0m%s" "-1" "${FUNCNAME[1]}() " "$* "
 		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
 			printf "\e[1;93m%s" "-> "
 			local f i
@@ -157,10 +156,10 @@ log::debug() {
 	esac
 	STD_LOG_DEBUG_DOT=$((${#STD_LOG_DEBUG_ADJUSTED}-6))
 	if [[ $STD_LOG_DEBUG_DOT -eq 0 ]]; then
-		printf "\r\e[2K\e[1;90m%s${STD_LOG_DEBUG_FUNC_COLOR}%s\e[0m%s" "[log::debug 0.${STD_LOG_DEBUG_ADJUSTED}] " "${FUNCNAME[1]}() " "$* "
+		printf "\r\e[2K\e[1;90m[%(%F %T)T %s] ${STD_LOG_DEBUG_FUNC_COLOR}%s\e[0m%s" "-1" "${STD_LOG_DEBUG_ADJUSTED}" "${FUNCNAME[1]}() " "$* "
 	else
-		printf "\r\e[2K\e[1;90m%s${STD_LOG_DEBUG_FUNC_COLOR}%s\e[0m%s" \
-			"[log::debug ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] " "${FUNCNAME[1]}() " "$* "
+		printf "\r\e[2K\e[1;90m[%(%F %T)T %s] ${STD_LOG_DEBUG_FUNC_COLOR}%s\e[0m%s" "-1" \
+			"${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}" "${FUNCNAME[1]}() " "$* "
 	fi
 	if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
 		printf "\e[1;93m%s" "-> "
@@ -351,7 +350,7 @@ printf "${OFF}%s\n" \
 	"Copyright (c) 2022 hinto-janaiyo <https://github.com/hinto-janaiyo>"
 exit 2
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 August 05 | 1659731971 | 7f27eed51a6fd6e2a97be4cdf186bfbc58336667"
+	printf "%s\n" "2022 August 28 | 1661705200 | 9f64be6a7cc060fcff600ea3350466a94e36bb63"
 	exit 3
 fi
 unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
@@ -754,10 +753,7 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 			log::fail "no functions found"
 			exit 3
 		fi
-		local d
-		for d in ${FUNCTIONS_LIB[@]}; do
-			echo "declare -frg $d" >> "$OUTPUT"
-		done
+		echo "declare -frg ${FUNCTIONS_LIB[*]}" >> "$OUTPUT"
 	fi
 fi
 if [[ $SRC_FILES ]]; then
@@ -778,10 +774,7 @@ if [[ $SRC_FILES ]]; then
 				log::fail "no functions found"
 				exit 3
 			fi
-			local d
-			for d in ${FUNCTIONS_SRC[@]}; do
-				echo "declare -frg $d" >> "$OUTPUT"
-			done
+			echo "declare -frg ${FUNCTIONS_SRC[*]}" >> "$OUTPUT"
 		fi
 	fi
 fi

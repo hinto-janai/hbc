@@ -540,10 +540,7 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 			log::fail "no functions found"
 			exit 3
 		fi
-		local d
-		for d in ${FUNCTIONS_LIB[@]}; do
-			echo "declare -frg $d" >> "$OUTPUT"
-		done
+		echo "declare -frg ${FUNCTIONS_LIB[*]}" >> "$OUTPUT"
 	fi
 fi
 
@@ -567,10 +564,7 @@ if [[ $SRC_FILES ]]; then
 				log::fail "no functions found"
 				exit 3
 			fi
-			local d
-			for d in ${FUNCTIONS_SRC[@]}; do
-				echo "declare -frg $d" >> "$OUTPUT"
-			done
+			echo "declare -frg ${FUNCTIONS_SRC[*]}" >> "$OUTPUT"
 		fi
 	fi
 fi
