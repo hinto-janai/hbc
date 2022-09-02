@@ -16,6 +16,7 @@ printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
 "    -c" " |" " --config" "  <hbc config file>" "    specify hbc config to use, default: [\$PWD/hbc.conf] or [/etc/hbc.conf]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${OFF}%s\n" \
 "    -d" " |" " --delete" "                       overwrite output file if it already exists" \
+"    -e" " |" " --expose" "                       expose all whitespace/comments, don't clean the output" \
 "    -f" " |" " --full" "                         fully clean the output, including [main.sh]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
 "    -i" " |" " --ignore" "  <codes> or <ALL>" "     ignore shellcheck codes or disable shellcheck: [-i SC2154,SC2155] or [-i ALL]" \
@@ -46,7 +47,7 @@ elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 fi
 
 # UNSET ENVIRONMENT
-unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE EXPOSE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
 
 # PARSE CONFIG FILE (because directly sourcing is spooky)
 hbc_parse_config() {
@@ -55,6 +56,7 @@ hbc_parse_config() {
 	for i in ${OPTIONS[@]}; do
 	    [[ $i =~ ^ADD=[[:alnum:]./_-]*$ ]]                   && declare -g LICENSE="${i/*=/}"
 	    [[ $i =~ ^DELETE=true[[:space:]]*$ ]]                && declare -g DELETE=true
+	    [[ $i =~ ^EXPOSE=true[[:space:]]*$ ]]                && declare -g EXPOSE=true
 		[[ $i =~ ^FULL=true[[:space:]]*$ ]]                  && declare -g FULL=true
 		[[ $i =~ ^IGNORE=SC.*$ ]]                            && declare -g IGNORE=${i/*=/}
 		[[ $i =~ ^LIBRARY=[[:alnum:]./_-]*$ ]]               && declare -g LIBRARY="${i/*=/}"
@@ -67,19 +69,21 @@ hbc_parse_config() {
 	    [[ $i =~ ^STD_LOG_DEBUG=true[[:space:]]*$ ]]         && declare -g STD_LOG_DEBUG=true
 	    [[ $i =~ ^STD_LOG_DEBUG_VERBOSE=true[[:space:]]*$ ]] && declare -g STD_LOG_DEBUG_VERBOSE=true
 	done
-	log::debug "=== hbc_parse_config ==="
-	log::debug "ADD     | $LICENSE"
-	log::debug "CONFIG  | $CONFIG"
-	log::debug "DELETE  | $DELETE"
-	log::debug "FULL    | $FULL"
-	log::debug "IGNORE  | $IGNORE"
-	log::debug "LIBRARY | $LIBRARY"
-	log::debug "MAIN    | $MAIN"
-	log::debug "OUTPUT  | $OUTPUT"
-	log::debug "QUIET   | $QUIET"
-	log::debug "RUN     | $RUN"
-	log::debug "SOURCE  | $SOURCE"
-	log::debug "TEST    | $TEST"
+	log::debug \
+		"=== hbc_parse_config ===" \
+		"ADD     | $LICENSE" \
+		"CONFIG  | $CONFIG"  \
+		"DELETE  | $DELETE"  \
+		"EXPOSE  | $EXPOSE"  \
+		"FULL    | $FULL"    \
+		"IGNORE  | $IGNORE"  \
+		"LIBRARY | $LIBRARY" \
+		"MAIN    | $MAIN"    \
+		"OUTPUT  | $OUTPUT"  \
+		"QUIET   | $QUIET"   \
+		"RUN     | $RUN"     \
+		"SOURCE  | $SOURCE"  \
+		"TEST    | $TEST"
 	return 0
 }
 
@@ -129,6 +133,7 @@ case $1 in
 		LICENSE="$1"; shift;;
 	-c | --config) shift; shift;;
 	-d | --delete) local DELETE=true; shift;;
+	-e | --expose) local EXPOSE=true; shift;;
 	-f | --full)   local FULL=true; shift;;
 	-i | --ignore)
 		shift
@@ -242,18 +247,18 @@ elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
 fi
 
 # DEBUG OPTION PRINTS
-log::debug "=== post --option debug ==="
-log::debug "ADD     | $LICENSE"
-log::debug "CONFIG  | $CONFIG"
-log::debug "DELETE  | $DELETE"
-log::debug "IGNORE  | $IGNORE"
-log::debug "LIBRARY | $LIBRARY"
-log::debug "MAIN    | $MAIN"
-log::debug "OUTPUT  | $OUTPUT"
-log::debug "QUIET   | $QUIET"
-log::debug "RUN     | $RUN"
-log::debug "SOURCE  | $SOURCE"
-log::debug "TEST    | $TEST"
+log::debug "=== post --option debug ===" \
+	"ADD     | $LICENSE" \
+	"CONFIG  | $CONFIG"  \
+	"DELETE  | $DELETE"  \
+	"IGNORE  | $IGNORE"  \
+	"LIBRARY | $LIBRARY" \
+	"MAIN    | $MAIN"    \
+	"OUTPUT  | $OUTPUT"  \
+	"QUIET   | $QUIET"   \
+	"RUN     | $RUN"     \
+	"SOURCE  | $SOURCE"  \
+	"TEST    | $TEST"
 if [[ $DIRECTORY_IS_LIB = true ]]; then
 	log::warn "library detected, not adding safety headers!"
 fi
@@ -329,31 +334,29 @@ local SAFETY_HEADER
 SAFETY_HEADER=$(cat << 'EOM'
 POSIXLY_CORRECT= || exit 90
 	# bash builtins
-\unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
-	# gnu core-utils
-\unset -f arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 92
-\unalias -a || exit 93
-unset POSIXLY_CORRECT || exit 94
-unset -f . : [ || exit 95
-set -eo pipefail || exit 96
+\unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 91
+\unalias -a || exit 92
+unset POSIXLY_CORRECT || exit 93
+unset -f . : [ || exit 94
+set -eo pipefail || exit 95
 EOM
 )
 # lib
 SAFETY_LIB=$(cat << 'EOM'
-trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 111;while :;do read;done' ERR || exit 112
 EOM
 )
 # src
 local SAFETY_SRC
 SAFETY_SRC=$(cat << 'EOM'
-trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 115' ERR || exit 115
+trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 113;while :;do read;done' ERR || exit 114
 EOM
 )
 # safety end
 local SAFETY_END
 SAFETY_END=$(cat << 'EOM'
-trap - ERR || exit 117
-set +eo pipefail || exit 118
+trap - ERR || exit 115
+set +eo pipefail || exit 116
 EOM
 )
 
@@ -444,6 +447,9 @@ if [[ $EXISTS_MAIN ]]; then
 fi
 
 #-------------------------------------------------------------------------------- CLEANING
+# SKIP IF OPTION EXPOSE IS GIVEN
+if [[ $EXPOSE != true ]]; then
+
 printf "${BYELLOW}%s${OFF}\n" "cleaning *************************"
 
 # SCRATCH (ref for grep to remove lines)
@@ -504,6 +510,8 @@ if [[ $FULL = true ]]; then
 	LINES_MAIN[1]=$(wc -l "$TMP_MAIN" | cut -d ' ' -f1)
 	log::tab "[main] sed removed: $((LINES_MAIN[0] - LINES_MAIN[1]))"
 	log::tab "[main] ${LINES_MAIN[0]} -> ${LINES_MAIN[1]}"
+fi
+
 fi
 
 #-------------------------------------------------------------------------------- LINKING

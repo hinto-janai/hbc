@@ -22,14 +22,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/9f64be6>
-#nix <1661705197>
-#hbc <7f27eed>
-#lib <stdlib/ask.sh/93731ac>
-#lib <stdlib/debug.sh/93731ac>
-#lib <stdlib/log.sh/93731ac>
-#lib <stdlib/readonly.sh/93731ac>
-#lib <stdlib/trace.sh/93731ac>
+#git <hbc/b0eecdc>
+#nix <1662078501>
+#hbc <9f64be6>
+#lib <stdlib/ask.sh/4c8490f>
+#lib <stdlib/debug.sh/4c8490f>
+#lib <stdlib/log.sh/4c8490f>
+#lib <stdlib/readonly.sh/4c8490f>
+#lib <stdlib/trace.sh/4c8490f>
 
 #-------------------------------------------------------------------------------- BEGIN SAFETY
 POSIXLY_CORRECT= || exit 90
@@ -116,7 +116,7 @@ log::danger() { printf "\r\e[2K\e[1;31m[DANGER]\e[0m %s\n" "$@"; }
 log::tab() { printf "\r\e[2K\e[0m         %s\n" "$@"; }
 log::prog() { printf "\r\e[2K\e[1;37m[ \e[0m....\e[1;37m ]\e[0m %s " "$@"; }
 log::debug() {
-	[[ $STD_LOG_DEBUG != true ]] && return 0
+	[[ $STD_LOG_DEBUG = true ]] || return 0
 	if [[ $STD_LOG_DEBUG_LAST_FUNC != "${FUNCNAME[1]}" ]]; then
 		declare -g STD_LOG_DEBUG_LAST_FUNC="${FUNCNAME[1]}"
 		case "$STD_LOG_DEBUG_FUNC_COLOR" in
@@ -129,24 +129,13 @@ log::debug() {
 			*) STD_LOG_DEBUG_FUNC_COLOR="\e[1;91m";;
 		esac
 	fi
+	local STD_LOG_DEBUG_DATE=$(printf "%(%F %T)T" "-1")
 	if [[ -z $STD_LOG_DEBUG_INIT ]]; then
 		declare -gr STD_LOG_DEBUG_INIT=${EPOCHREALTIME//[!0-9]/}
-		printf "\r\e[2K\e[1;90m[%(%F %T)T 0.000000] ${STD_LOG_DEBUG_FUNC_COLOR}%s\e[0m%s" "-1" "${FUNCNAME[1]}() " "$* "
-		if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
-			printf "\e[1;93m%s" "-> "
-			local f i
-			i=1
-			for f in ${BASH_LINENO[@]}; do
-				[[ $f = 0 ]] && break
-				printf "\e[1;91m%s\e[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
-				((i++))
-			done
-		fi
-		printf "\e[0m\n"
+		printf "\r\e[2K\e[1;90m[${STD_LOG_DEBUG_DATE} 0.000000] ${STD_LOG_DEBUG_FUNC_COLOR}${FUNCNAME[1]}()\e[0m %s\n" "$@"
 		return
 	fi
-	local STD_LOG_DEBUG_ADJUSTED STD_LOG_DEBUG_DOT
-	STD_LOG_DEBUG_ADJUSTED=$((${EPOCHREALTIME//[!0-9]/}-STD_LOG_DEBUG_INIT))
+	local STD_LOG_DEBUG_ADJUSTED=$((${EPOCHREALTIME//[!0-9]/}-STD_LOG_DEBUG_INIT))
 	case ${#STD_LOG_DEBUG_ADJUSTED} in
 		1) STD_LOG_DEBUG_ADJUSTED=00000${STD_LOG_DEBUG_ADJUSTED};;
 		2) STD_LOG_DEBUG_ADJUSTED=0000${STD_LOG_DEBUG_ADJUSTED};;
@@ -154,60 +143,14 @@ log::debug() {
 		4) STD_LOG_DEBUG_ADJUSTED=00${STD_LOG_DEBUG_ADJUSTED};;
 		5) STD_LOG_DEBUG_ADJUSTED=0${STD_LOG_DEBUG_ADJUSTED};;
 	esac
-	STD_LOG_DEBUG_DOT=$((${#STD_LOG_DEBUG_ADJUSTED}-6))
-	if [[ $STD_LOG_DEBUG_DOT -eq 0 ]]; then
-		printf "\r\e[2K\e[1;90m[%(%F %T)T %s] ${STD_LOG_DEBUG_FUNC_COLOR}%s\e[0m%s" "-1" "${STD_LOG_DEBUG_ADJUSTED}" "${FUNCNAME[1]}() " "$* "
+	local STD_LOG_DEBUG_DOT=$((${#STD_LOG_DEBUG_ADJUSTED}-6))
+	if [[ $STD_LOG_DEBUG_DOT = 0 ]]; then
+		printf "\r\e[2K\e[1;90m[${STD_LOG_DEBUG_DATE} 0.${STD_LOG_DEBUG_ADJUSTED}] ${STD_LOG_DEBUG_FUNC_COLOR}${FUNCNAME[1]}()\e[0m %s\n" "$@"
 	else
-		printf "\r\e[2K\e[1;90m[%(%F %T)T %s] ${STD_LOG_DEBUG_FUNC_COLOR}%s\e[0m%s" "-1" \
-			"${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}" "${FUNCNAME[1]}() " "$* "
+		printf "\r\e[2K\e[1;90m[${STD_LOG_DEBUG_DATE} ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] ${STD_LOG_DEBUG_FUNC_COLOR}${FUNCNAME[1]}()\e[0m %s\n" "$@"
 	fi
-	if [[ $STD_LOG_DEBUG_VERBOSE = true ]]; then
-		printf "\e[1;93m%s" "-> "
-		local f i
-		i=1
-		for f in ${BASH_LINENO[@]}; do
-			[[ $f = 0 ]] && break
-			printf "\e[1;91m%s\e[1;92m%s" "${f}: " "${FUNCNAME[${i}]}() "
-			((i++))
-		done
-	fi
-	printf "\e[0m\n"
 }
-readonly BLACK="\e[0;30m"
-readonly RED="\e[0;31m"
-readonly GREEN="\e[0;32m"
-readonly YELLOW="\e[0;33m"
-readonly BLUE="\e[0;34m"
-readonly PURPLE="\e[0;35m"
-readonly CYAN="\e[0;36m"
-readonly WHITE="\e[0;37m"
-readonly BBLACK="\e[1;90m"
-readonly BRED="\e[1;91m"
-readonly BGREEN="\e[1;92m"
-readonly BYELLOW="\e[1;93m"
-readonly BBLUE="\e[1;94m"
-readonly BPURPLE="\e[1;95m"
-readonly BCYAN="\e[1;96m"
-readonly BWHITE="\e[1;97m"
-readonly UBLACK="\e[4;30m"
-readonly URED="\e[4;31m"
-readonly UGREEN="\e[4;32m"
-readonly UYELLOW="\e[4;33m"
-readonly UBLUE="\e[4;34m"
-readonly UPURPLE="\e[4;35m"
-readonly UCYAN="\e[4;36m"
-readonly UWHITE="\e[4;37m"
-readonly IBLACK="\e[0;90m"
-readonly IRED="\e[0;91m"
-readonly IGREEN="\e[0;92m"
-readonly IYELLOW="\e[0;93m"
-readonly IBLUE="\e[0;94m"
-readonly IPURPLE="\e[0;95m"
-readonly ICYAN="\e[0;96m"
-readonly IWHITE="\e[0;97m"
-readonly BOLD="\e[1m"
-readonly ITALIC="\e[3m"
-readonly OFF="\e[0m"
+readonly BLACK="\e[0;30m" RED="\e[0;31m" GREEN="\e[0;32m" YELLOW="\e[0;33m" BLUE="\e[0;34m" PURPLE="\e[0;35m" CYAN="\e[0;36m" WHITE="\e[0;37m" BBLACK="\e[1;90m" BRED="\e[1;91m" BGREEN="\e[1;92m" BYELLOW="\e[1;93m" BBLUE="\e[1;94m" BPURPLE="\e[1;95m" BCYAN="\e[1;96m" BWHITE="\e[1;97m" UBLACK="\e[4;30m" URED="\e[4;31m" UGREEN="\e[4;32m" UYELLOW="\e[4;33m" UBLUE="\e[4;34m" UPURPLE="\e[4;35m" UCYAN="\e[4;36m" UWHITE="\e[4;37m" IBLACK="\e[0;90m" IRED="\e[0;91m" IGREEN="\e[0;92m" IYELLOW="\e[0;93m" IBLUE="\e[0;94m" IPURPLE="\e[0;95m" ICYAN="\e[0;96m" IWHITE="\e[0;97m" BOLD="\e[1m" ITALIC="\e[3m" OFF="\e[0m"
 ___BEGIN___ERROR___TRACE___() {
 	POSIXLY_CORRECT= || exit 8
 	\unset -f true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 9
@@ -297,21 +240,7 @@ ___ENDOF___ERROR___TRACE___() {
 	while true; do false; done
 	while :; do :; done
 }
-declare -frg ask::yes
-declare -frg ask::no
-declare -frg ask::sudo
-declare -frg debug
-declare -frg debug::trap
-declare -frg log::ok
-declare -frg log::info
-declare -frg log::warn
-declare -frg log::fail
-declare -frg log::danger
-declare -frg log::tab
-declare -frg log::prog
-declare -frg log::debug
-declare -frg ___BEGIN___ERROR___TRACE___
-declare -frg ___ENDOF___ERROR___TRACE___
+declare -frg ask::yes ask::no ask::sudo debug debug::trap log::ok log::info log::warn log::fail log::danger log::tab log::prog log::debug ___BEGIN___ERROR___TRACE___ ___ENDOF___ERROR___TRACE___
 trap - ERR || exit 117
 set +eo pipefail || exit 118
 
@@ -326,6 +255,7 @@ printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
 "    -c" " |" " --config" "  <hbc config file>" "    specify hbc config to use, default: [\$PWD/hbc.conf] or [/etc/hbc.conf]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${OFF}%s\n" \
 "    -d" " |" " --delete" "                       overwrite output file if it already exists" \
+"    -e" " |" " --expose" "                       expose all whitespace/comments, don't clean the output" \
 "    -f" " |" " --full" "                         fully clean the output, including [main.sh]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
 "    -i" " |" " --ignore" "  <codes> or <ALL>" "     ignore shellcheck codes or disable shellcheck: [-i SC2154,SC2155] or [-i ALL]" \
@@ -350,16 +280,17 @@ printf "${OFF}%s\n" \
 	"Copyright (c) 2022 hinto-janaiyo <https://github.com/hinto-janaiyo>"
 exit 2
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 August 28 | 1661705197 | 9f64be6a7cc060fcff600ea3350466a94e36bb63"
+	printf "%s\n" "2022 September 01 | 1662078501 | b0eecdc66fd23ebc711e0c4fcaf5b8879df2c5f7"
 	exit 3
 fi
-unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE EXPOSE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
 hbc_parse_config() {
 	local i IFS=$'\n' OPTIONS || return 1
 	mapfile OPTIONS < $1 || return 2
 	for i in ${OPTIONS[@]}; do
 	    [[ $i =~ ^ADD=[[:alnum:]./_-]*$ ]]                   && declare -g LICENSE="${i/*=/}"
 	    [[ $i =~ ^DELETE=true[[:space:]]*$ ]]                && declare -g DELETE=true
+	    [[ $i =~ ^EXPOSE=true[[:space:]]*$ ]]                && declare -g EXPOSE=true
 		[[ $i =~ ^FULL=true[[:space:]]*$ ]]                  && declare -g FULL=true
 		[[ $i =~ ^IGNORE=SC.*$ ]]                            && declare -g IGNORE=${i/*=/}
 		[[ $i =~ ^LIBRARY=[[:alnum:]./_-]*$ ]]               && declare -g LIBRARY="${i/*=/}"
@@ -372,19 +303,21 @@ hbc_parse_config() {
 	    [[ $i =~ ^STD_LOG_DEBUG=true[[:space:]]*$ ]]         && declare -g STD_LOG_DEBUG=true
 	    [[ $i =~ ^STD_LOG_DEBUG_VERBOSE=true[[:space:]]*$ ]] && declare -g STD_LOG_DEBUG_VERBOSE=true
 	done
-	log::debug "=== hbc_parse_config ==="
-	log::debug "ADD     | $LICENSE"
-	log::debug "CONFIG  | $CONFIG"
-	log::debug "DELETE  | $DELETE"
-	log::debug "FULL    | $FULL"
-	log::debug "IGNORE  | $IGNORE"
-	log::debug "LIBRARY | $LIBRARY"
-	log::debug "MAIN    | $MAIN"
-	log::debug "OUTPUT  | $OUTPUT"
-	log::debug "QUIET   | $QUIET"
-	log::debug "RUN     | $RUN"
-	log::debug "SOURCE  | $SOURCE"
-	log::debug "TEST    | $TEST"
+	log::debug \
+		"=== hbc_parse_config ===" \
+		"ADD     | $LICENSE" \
+		"CONFIG  | $CONFIG"  \
+		"DELETE  | $DELETE"  \
+		"EXPOSE  | $EXPOSE"  \
+		"FULL    | $FULL"    \
+		"IGNORE  | $IGNORE"  \
+		"LIBRARY | $LIBRARY" \
+		"MAIN    | $MAIN"    \
+		"OUTPUT  | $OUTPUT"  \
+		"QUIET   | $QUIET"   \
+		"RUN     | $RUN"     \
+		"SOURCE  | $SOURCE"  \
+		"TEST    | $TEST"
 	return 0
 }
 local i CONFIG_FLAG_SET
@@ -427,6 +360,7 @@ case $1 in
 		LICENSE="$1"; shift;;
 	-c | --config) shift; shift;;
 	-d | --delete) local DELETE=true; shift;;
+	-e | --expose) local EXPOSE=true; shift;;
 	-f | --full)   local FULL=true; shift;;
 	-i | --ignore)
 		shift
@@ -522,18 +456,18 @@ elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
 	log::fail "hbc: \$OUTPUT contains weird characters; only [A-Za-z0-9_/~$] is supported"
 	exit 1
 fi
-log::debug "=== post --option debug ==="
-log::debug "ADD     | $LICENSE"
-log::debug "CONFIG  | $CONFIG"
-log::debug "DELETE  | $DELETE"
-log::debug "IGNORE  | $IGNORE"
-log::debug "LIBRARY | $LIBRARY"
-log::debug "MAIN    | $MAIN"
-log::debug "OUTPUT  | $OUTPUT"
-log::debug "QUIET   | $QUIET"
-log::debug "RUN     | $RUN"
-log::debug "SOURCE  | $SOURCE"
-log::debug "TEST    | $TEST"
+log::debug "=== post --option debug ===" \
+	"ADD     | $LICENSE" \
+	"CONFIG  | $CONFIG"  \
+	"DELETE  | $DELETE"  \
+	"IGNORE  | $IGNORE"  \
+	"LIBRARY | $LIBRARY" \
+	"MAIN    | $MAIN"    \
+	"OUTPUT  | $OUTPUT"  \
+	"QUIET   | $QUIET"   \
+	"RUN     | $RUN"     \
+	"SOURCE  | $SOURCE"  \
+	"TEST    | $TEST"
 if [[ $DIRECTORY_IS_LIB = true ]]; then
 	log::warn "library detected, not adding safety headers!"
 fi
@@ -587,27 +521,26 @@ fi
 local SAFETY_HEADER
 SAFETY_HEADER=$(cat << 'EOM'
 POSIXLY_CORRECT= || exit 90
-\unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
-\unset -f arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 92
-\unalias -a || exit 93
-unset POSIXLY_CORRECT || exit 94
-unset -f . : [ || exit 95
-set -eo pipefail || exit 96
+\unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 91
+\unalias -a || exit 92
+unset POSIXLY_CORRECT || exit 93
+unset -f . : [ || exit 94
+set -eo pipefail || exit 95
 EOM
 )
 SAFETY_LIB=$(cat << 'EOM'
-trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 111;while :;do read;done' ERR || exit 112
 EOM
 )
 local SAFETY_SRC
 SAFETY_SRC=$(cat << 'EOM'
-trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 115' ERR || exit 115
+trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 113;while :;do read;done' ERR || exit 114
 EOM
 )
 local SAFETY_END
 SAFETY_END=$(cat << 'EOM'
-trap - ERR || exit 117
-set +eo pipefail || exit 118
+trap - ERR || exit 115
+set +eo pipefail || exit 116
 EOM
 )
 printf "${BBLUE}%s${OFF}\n" "compiling [header] ***************"
@@ -672,6 +605,7 @@ if [[ $EXISTS_MAIN ]]; then
 	log::tab "$MAIN"
 	echo "$EXISTS_MAIN" > "$TMP_MAIN"
 fi
+if [[ $EXPOSE != true ]]; then
 printf "${BYELLOW}%s${OFF}\n" "cleaning *************************"
 log::tab "creating scratch"
 echo "$SAFETY_HEADER" > "$TMP_SCRATCH"
@@ -726,6 +660,7 @@ if [[ $FULL = true ]]; then
 	LINES_MAIN[1]=$(wc -l "$TMP_MAIN" | cut -d ' ' -f1)
 	log::tab "[main] sed removed: $((LINES_MAIN[0] - LINES_MAIN[1]))"
 	log::tab "[main] ${LINES_MAIN[0]} -> ${LINES_MAIN[1]}"
+fi
 fi
 printf "${BGREEN}%s${OFF}\n" "linking  *************************"
 printf "%s" "" > "$OUTPUT"
