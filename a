@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 #
 # hbc - hinto's bash compiler
 #
@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/b0eecdc>
-#nix <1662078501>
-#hbc <9f64be6>
+#git <hbc/a93fdb9>
+#nix <1662169686>
+#hbc <a93fdb9>
 #lib <stdlib/ask.sh/4c8490f>
 #lib <stdlib/debug.sh/4c8490f>
 #lib <stdlib/log.sh/4c8490f>
@@ -33,15 +33,15 @@
 
 #-------------------------------------------------------------------------------- BEGIN SAFETY
 POSIXLY_CORRECT= || exit 90
-\unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait || exit 91
-\unset -f arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 92
-\unalias -a || exit 93
-unset POSIXLY_CORRECT || exit 94
-unset -f . : [ || exit 95
-set -eo pipefail || exit 96
+	# bash builtins
+\unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 91
+\unalias -a || exit 92
+unset POSIXLY_CORRECT || exit 93
+unset -f . : [ || exit 94
+set -eo pipefail || exit 95
 
 #-------------------------------------------------------------------------------- BEGIN LIB
-trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}" "[file] $0" "[code] $?";set +eo pipefail;trap - ERR;while :;do read;done;exit 112' ERR || exit 112
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 111;while :;do read;done' ERR || exit 112
 ask::yes() {
 	local STD_ASK_REPONSE || return 44
 	read -r STD_ASK_REPONSE
@@ -150,7 +150,7 @@ log::debug() {
 		printf "\r\e[2K\e[1;90m[${STD_LOG_DEBUG_DATE} ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] ${STD_LOG_DEBUG_FUNC_COLOR}${FUNCNAME[1]}()\e[0m %s\n" "$@"
 	fi
 }
-readonly BLACK="\e[0;30m" RED="\e[0;31m" GREEN="\e[0;32m" YELLOW="\e[0;33m" BLUE="\e[0;34m" PURPLE="\e[0;35m" CYAN="\e[0;36m" WHITE="\e[0;37m" BBLACK="\e[1;90m" BRED="\e[1;91m" BGREEN="\e[1;92m" BYELLOW="\e[1;93m" BBLUE="\e[1;94m" BPURPLE="\e[1;95m" BCYAN="\e[1;96m" BWHITE="\e[1;97m" UBLACK="\e[4;30m" URED="\e[4;31m" UGREEN="\e[4;32m" UYELLOW="\e[4;33m" UBLUE="\e[4;34m" UPURPLE="\e[4;35m" UCYAN="\e[4;36m" UWHITE="\e[4;37m" IBLACK="\e[0;90m" IRED="\e[0;91m" IGREEN="\e[0;92m" IYELLOW="\e[0;93m" IBLUE="\e[0;94m" IPURPLE="\e[0;95m" ICYAN="\e[0;96m" IWHITE="\e[0;97m" BOLD="\e[1m" ITALIC="\e[3m" OFF="\e[0m"
+readonly BLACK="\e[0;30m" RED="\e[0;31m" GREEN="\e[0;32m" YELLOW="\e[0;33m" BLUE="\e[0;34m" PURPLE="\e[0;35m" CYAN="\e[0;36m" WHITE="\e[0;37m" BBLACK="\e[1;90m" BRED="\e[1;91m" BGREEN="\e[1;92m" BYELLOW="\e[1;93m" BBLUE="\e[1;94m" BPURPLE="\e[1;95m" BCYAN="\e[1;96m" BWHITE="\e[1;97m" UBLACK="\e[4;30m" URED="\e[4;31m" UGREEN="\e[4;32m" UYELLOW="\e[4;33m" UBLUE="\e[4;34m" UPURPLE="\e[4;35m" UCYAN="\e[4;36m" UWHITE="\e[4;37m" IBLACK="\e[0;90m" IRED="\e[0;91m" IGREEN="\e[0;92m" IYELLOW="\e[0;93m" IBLUE="\e[0;94m" IPURPLE="\e[0;95m" ICYAN="\e[0;96m" IWHITE="\e[0;97m" BOLD="\e[1m" ITALIC="\e[3m" OFF="\e[m" RESET_LINE="\r\e[2K" NEW_BUFFER="\e[?1049h" OLD_BUFFER="\e[?1049l" HIDE_CURSOR="\e[?25l" SHOW_CURSOR="\e[?25h"
 ___BEGIN___ERROR___TRACE___() {
 	POSIXLY_CORRECT= || exit 8
 	\unset -f true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 9
@@ -231,8 +231,8 @@ ___ENDOF___ERROR___TRACE___() {
 	trap - ERR || exit 28
 	if [[ $BASH_SUBSHELL != 0 ]]; then
 		printf "\e[1;93m%s\e[0m\n" "======  SUB-SHELLS TERMINATED  ======"
+		builtin kill -s TERM 0
 	fi
-	builtin kill -s TERM 0
 	exit 99
 	printf "\e[1;97m%s\e[0m\n" "=KILL/EXIT FAIL, BEGIN INFINITE LOOP="
 	while :; do read -s -r; done
@@ -241,13 +241,15 @@ ___ENDOF___ERROR___TRACE___() {
 	while :; do :; done
 }
 declare -frg ask::yes ask::no ask::sudo debug debug::trap log::ok log::info log::warn log::fail log::danger log::tab log::prog log::debug ___BEGIN___ERROR___TRACE___ ___ENDOF___ERROR___TRACE___
-trap - ERR || exit 117
-set +eo pipefail || exit 118
+trap - ERR || exit 115
+set +eo pipefail || exit 116
 
 #-------------------------------------------------------------------------------- BEGIN MAIN
 hbc() {
+#-------------------------------------------------------------------------------- HBC OPTIONS
 ___BEGIN___ERROR___TRACE___
 debug
+# HELP OPTION
 if [[ $* = *"-h"* || $* = *"--help"* ]]; then
 printf "${BWHITE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s\n\n" "USAGE: " "hbc " "--OPTION " "<ARGUMENT>"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
@@ -279,11 +281,16 @@ printf "${OFF}%s\n" \
 	"Full documentation <https://github.com/hinto-janaiyo/hbc>" \
 	"Copyright (c) 2022 hinto-janaiyo <https://github.com/hinto-janaiyo>"
 exit 2
+# VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 September 01 | 1662078501 | b0eecdc66fd23ebc711e0c4fcaf5b8879df2c5f7"
+	printf "%s\n" "2022 September 02 | 1662169686 | a93fdb9ce6e0e37a5d13ce71479ee03c4c8f0d5d"
 	exit 3
 fi
+
+# UNSET ENVIRONMENT
 unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE EXPOSE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+
+# PARSE CONFIG FILE (because directly sourcing is spooky)
 hbc_parse_config() {
 	local i IFS=$'\n' OPTIONS || return 1
 	mapfile OPTIONS < $1 || return 2
@@ -320,6 +327,8 @@ hbc_parse_config() {
 		"TEST    | $TEST"
 	return 0
 }
+
+# SOURCE CONFIG BEFORE OPTIONS
 local i CONFIG_FLAG_SET
 for i in $@ " "; do
 	if [[ $i = "-c" || $i = "--config" ]]; then
@@ -338,6 +347,8 @@ for i in $@ " "; do
 		fi
 	fi
 done
+
+# IF NO --CONFIG, HBC DEFAULT CONFIG
 if [[ -r "$PWD/hbc.conf" && -z $CONFIG_FLAG_SET ]]; then
 	local CONFIG="$PWD/hbc.conf"
 	if ! hbc_parse_config "$CONFIG"; then
@@ -349,7 +360,10 @@ elif [[ -r /etc/hbc.conf && -z $CONFIG_FLAG_SET ]]; then
 		log::warn "config: $CONFIG fail"
 	fi
 fi
+
+# PARSE ARGS
 while [[ $# != 0 ]]; do
+# SHORT+LONG OPTIONS (overwrites config)
 case $1 in
 	-a | --add)
 		shift
@@ -403,9 +417,15 @@ case $1 in
 	*) log::fail "hbc: invalid option: $1"; exit 1;;
 esac
 done
+# to make the config test work
 [[ $TEST = true ]] && RUN=true QUIET=true
 ___ENDOF___ERROR___TRACE___
+
+#-------------------------------------------------------------------------------- SANITY CHECKS
+# CONFIG
 [[ $CONFIG && -z $QUIET ]] && log::info "config: $CONFIG"
+
+# LICENSE
 [[ -z $LICENSE ]] && local LICENSE="LICENSE"
 if [[ -r $LICENSE ]]; then
 	[[ -z $QUIET ]] && log::info "add: $LICENSE"
@@ -413,12 +433,16 @@ else
 	log::warn "add: $LICENSE not found"
 	unset -v LICENSE
 fi
+
+# SRC DIR
 [[ -z $SOURCE ]] && local SOURCE="src"
 if [[ ! -d $SOURCE ]]; then
 	log::warn "src: $SOURCE not found"
 else
 	[[ -z $QUIET ]] && log::info "src: $SOURCE"
 fi
+
+# MAIN SCRIPT
 [[ -z $MAIN ]] && local MAIN="main.sh"
 if [[ ! -r $MAIN ]]; then
 	log::fail "main: $MAIN not found"
@@ -426,6 +450,8 @@ if [[ ! -r $MAIN ]]; then
 else
 	[[ -z $QUIET ]] && log::info "main: $MAIN"
 fi
+
+# BOTH LIB/SRC NOT FOUND
 local EXISTS_LIB=true
 local SRC_FILES
 local SRC_FILE_NAMES
@@ -437,6 +463,8 @@ if ! grep -m1 "^#include <.*>$" "$MAIN" &>/dev/null; then
 		exit 1
 	fi
 fi
+
+# $1 OUT.SH NAMING
 local DIRECTORY_NAME
 DIRECTORY_NAME="$(basename "$PWD")"
 if [[ $DIRECTORY_NAME = hbc && -z $OUTPUT ]]; then
@@ -449,6 +477,8 @@ case $DIRECTORY_NAME in
 		DIRECTORY_IS_LIB=true
 		;;
 esac
+
+# IF MAIN/OUT ARE WEIRD CHARACTERS
 if [[ $MAIN != [A-Za-z0-9_/~$]* ]]; then
 	log::fail "hbc: \$MAIN contains weird characters; only [A-Za-z0-9_/~$] is supported"
 	exit 1
@@ -456,6 +486,8 @@ elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
 	log::fail "hbc: \$OUTPUT contains weird characters; only [A-Za-z0-9_/~$] is supported"
 	exit 1
 fi
+
+# DEBUG OPTION PRINTS
 log::debug "=== post --option debug ===" \
 	"ADD     | $LICENSE" \
 	"CONFIG  | $CONFIG"  \
@@ -471,24 +503,41 @@ log::debug "=== post --option debug ===" \
 if [[ $DIRECTORY_IS_LIB = true ]]; then
 	log::warn "library detected, not adding safety headers!"
 fi
+
+# OUT ALREADY EXISTS WARNING
 if [[ -e $OUTPUT && $DELETE != true && $TEST != true ]]; then
 	log::warn "$OUTPUT already exists"
 	printf "%s" "         overwrite? (y/N) "
 	ask::no && exit 2
 fi
+
+# QUIET OPTION
 [[ $QUIET = true ]] && exec 3>&1 &>/dev/null
+
+#-------------------------------------------------------------------------------- VARIABLE INIT
 ___BEGIN___ERROR___TRACE___
+
+# HEADERS
 local HEADER_SAFETY="#-------------------------------------------------------------------------------- BEGIN SAFETY"
 local HEADER_LIB="#-------------------------------------------------------------------------------- BEGIN LIB"
 local HEADER_SRC="#-------------------------------------------------------------------------------- BEGIN SRC"
 local HEADER_MAIN="#-------------------------------------------------------------------------------- BEGIN MAIN"
 local ENDOF_MAIN="#-------------------------------------------------------------------------------- ENDOF MAIN"
+
+# GIT HASH
 local DIRECTORY_GIT
 DIRECTORY_GIT=$(git rev-parse --short HEAD 2>/dev/null) || unset DIRECTORY_GIT
+
+# HBC VERSION
 local VERSION_HBC
 VERSION_HBC=$(grep -m1 "^#git <hbc/.*>$" "$0" | grep -o "\/.*>" | tr -d '/>')
+
+# LIB/SRC/MAIN
 local LIB_GIT
 [[ -z $LIBRARY ]] && LIBRARY="/usr/local/include"
+#local SRC_FILES # this gets defined in the beginning sanity check
+
+# MKTEMP
 declare -g TMP_DIR
 local TMP_HEADER
 local TMP_SAFETY
@@ -513,14 +562,19 @@ TMP_LIB="$(mktemp "$TMP_DIR"/lib.XXXXXXXXXX)"
 TMP_SRC="$(mktemp "$TMP_DIR"/src.XXXXXXXXXX)"
 TMP_MAIN="$(mktemp "$TMP_DIR"/main.XXXXXXXXXX)"
 TMP_SCRATCH="$(mktemp "$TMP_DIR"/scratch.XXXXXXXXXX)"
+# TEST OUTPUT
 if [[ $TEST = true ]]; then
 	local TMP_TEST
 	TMP_TEST="$(mktemp "$TMP_DIR"/test.XXXXXXXXXX)"
 	OUTPUT="$TMP_TEST"
 fi
+
+# SAFETY HEADERS
+# safety
 local SAFETY_HEADER
 SAFETY_HEADER=$(cat << 'EOM'
 POSIXLY_CORRECT= || exit 90
+	# bash builtins
 \unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 91
 \unalias -a || exit 92
 unset POSIXLY_CORRECT || exit 93
@@ -528,30 +582,40 @@ unset -f . : [ || exit 94
 set -eo pipefail || exit 95
 EOM
 )
+# lib
 SAFETY_LIB=$(cat << 'EOM'
 trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 111;while :;do read;done' ERR || exit 112
 EOM
 )
+# src
 local SAFETY_SRC
 SAFETY_SRC=$(cat << 'EOM'
 trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 113;while :;do read;done' ERR || exit 114
 EOM
 )
+# safety end
 local SAFETY_END
 SAFETY_END=$(cat << 'EOM'
 trap - ERR || exit 115
 set +eo pipefail || exit 116
 EOM
 )
+
+#-------------------------------------------------------------------------------- HEADER
 printf "${BBLUE}%s${OFF}\n" "compiling [header] ***************"
-log::tab "#!/usr/bin/env bash"
-echo "#!/usr/bin/env bash" > "$TMP_HEADER"
+# BASH SHEBANG
+log::tab "#!/usr/bin/bash"
+echo "#!/usr/bin/bash" > "$TMP_HEADER"
+
+# LICENSE
 if [[ $LICENSE ]]; then
 	log::tab "add: $LICENSE"
 	echo "#" >> "$TMP_HEADER"
 	cat "$LICENSE" >> "$TMP_HEADER"
 	echo  >> "$TMP_HEADER"
 fi
+
+# GIT HASH
 if [[ $DIRECTORY_GIT ]]; then
 	log::tab "git: $DIRECTORY_GIT"
 	if [[ $DIRECTORY_NAME = hbc ]]; then
@@ -562,21 +626,33 @@ if [[ $DIRECTORY_GIT ]]; then
 else
 	log::warn "git: no hash found"
 fi
+
+# UNIX TIME
 log::tab "nix: $EPOCHSECONDS"
 echo "#nix <$EPOCHSECONDS>" >> "$TMP_HEADER"
+
+# HBC VERSION
 log::tab "hbc: $VERSION_HBC"
 echo "#hbc <$VERSION_HBC>" >> "$TMP_HEADER"
+
+#-------------------------------------------------------------------------------- SAFETY
+# ONLY CREATE SAFETY IF NOT CREATING LIBRARY CODE
 if [[ $DIRECTORY_IS_LIB != true ]]; then
 	printf "${BRED}%s${OFF}\n" "creating [safety] ****************"
 	log::tab "<safety>"
 	echo "$SAFETY_HEADER" >> "$TMP_SAFETY"
 fi
+
+#-------------------------------------------------------------------------------- LIB
+# LIB LOOP
 if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 	printf "${BPURPLE}%s${OFF}\n" "compiling [lib] ******************"
 	local i
+	# include each found #include in TMP_LIB
 	for i in $(grep "^#include <.*>$" "$MAIN" | cut -d ' ' -f2 | tr -d '<>' | sort); do
 		if [[ $i = *.bash || $i = *.sh && -f "${LIBRARY}/${i}" ]]; then
 			sed "/^#\|^[[:space:]]#/d" "$LIBRARY/$i" >> "$TMP_LIB"
+			# if #git is found in the lib file, attach to TMP_HEADER
 			if LIB_GIT=$(grep -m1 "^#git <.*>$" "$LIBRARY/$i" | cut -d ' ' -f2); then
 				log::tab "$LIB_GIT"
 				echo "#lib $LIB_GIT" >> "$TMP_HEADER"
@@ -590,6 +666,9 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 		fi
 	done
 fi
+
+#-------------------------------------------------------------------------------- SRC
+# SRC LOOP
 if [[ $SRC_FILES ]]; then
 	printf "${BCYAN}%s${OFF}\n" "compiling [src] ******************"
 	for i in $SRC_FILES; do
@@ -598,6 +677,8 @@ if [[ $SRC_FILES ]]; then
 		echo "#src <${i/src\//}>" >> "$TMP_HEADER"
 	done
 fi
+#-------------------------------------------------------------------------------- MAIN
+# ADD MAIN TO TMP
 local EXISTS_MAIN
 EXISTS_MAIN=$(sed -e "/^#include <.*>$/d" -e '/./,$!d' "$MAIN")
 if [[ $EXISTS_MAIN ]]; then
@@ -605,13 +686,21 @@ if [[ $EXISTS_MAIN ]]; then
 	log::tab "$MAIN"
 	echo "$EXISTS_MAIN" > "$TMP_MAIN"
 fi
+
+#-------------------------------------------------------------------------------- CLEANING
+# SKIP IF OPTION EXPOSE IS GIVEN
 if [[ $EXPOSE != true ]]; then
+
 printf "${BYELLOW}%s${OFF}\n" "cleaning *************************"
+
+# SCRATCH (ref for grep to remove lines)
 log::tab "creating scratch"
 echo "$SAFETY_HEADER" > "$TMP_SCRATCH"
 echo "$SAFETY_LIB" >> "$TMP_SCRATCH"
 echo "$SAFETY_SRC" >> "$TMP_SCRATCH"
 echo "$SAFETY_END" >> "$TMP_SCRATCH"
+
+# LIB
 if [[ $EXISTS_LIB = true ]]; then
 	local LINES_LIB
 	LINES_LIB[0]=$(wc -l "$TMP_LIB" | cut -d ' ' -f1)
@@ -630,6 +719,7 @@ if [[ $EXISTS_LIB = true ]]; then
 	fi
 	log::tab "[lib] ${LINES_LIB[0]} -> ${LINES_LIB[2]}"
 fi
+# SRC
 if [[ $SRC_FILES ]]; then
 	local LINES_SRC
 	LINES_SRC[0]=$(wc -l "$TMP_SRC" | cut -d ' ' -f1)
@@ -648,6 +738,7 @@ if [[ $SRC_FILES ]]; then
 	fi
 	log::tab "[src] ${LINES_SRC[0]} -> ${LINES_SRC[2]}"
 fi
+# MAIN
 if [[ $FULL = true ]]; then
 	local LINES_MAIN
 	LINES_MAIN[0]=$(wc -l "$TMP_MAIN" | cut -d ' ' -f1)
@@ -661,11 +752,18 @@ if [[ $FULL = true ]]; then
 	log::tab "[main] sed removed: $((LINES_MAIN[0] - LINES_MAIN[1]))"
 	log::tab "[main] ${LINES_MAIN[0]} -> ${LINES_MAIN[1]}"
 fi
+
 fi
+
+#-------------------------------------------------------------------------------- LINKING
 printf "${BGREEN}%s${OFF}\n" "linking  *************************"
+
+# HEADER
 printf "%s" "" > "$OUTPUT"
 log::tab "[header] ---------> line $(wc -l "$OUTPUT" | cut -f1 -d ' ')"
 cat "$TMP_HEADER" > "$OUTPUT"
+
+# SAFETY
 if [[ $DIRECTORY_IS_LIB != true ]]; then
 	echo >> "$OUTPUT"
 	log::tab "[safety::header] -> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
@@ -673,6 +771,8 @@ if [[ $DIRECTORY_IS_LIB != true ]]; then
 	log::tab "[safety] ---------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	cat "$TMP_SAFETY" >> "$OUTPUT"
 fi
+
+# LIB
 if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 	echo >> "$OUTPUT"
 	log::tab "[lib::header] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
@@ -681,6 +781,7 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 	echo "$SAFETY_LIB" >> "$OUTPUT"
 	log::tab "[lib] ------------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	cat "$TMP_LIB" >> "$OUTPUT"
+	# DECLARE -FR
 	log::tab "[lib::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	local FUNCTIONS_LIB
 	if FUNCTIONS_LIB=($(grep -ho "^[0-9A-Za-z.:_-]\+(){\|^[0-9A-Za-z.:_-]\+()[[:blank:]]\+{" "$TMP_LIB" | tr -d '(){ ')); then
@@ -691,6 +792,8 @@ if [[ $EXISTS_LIB = true && $DIRECTORY_IS_LIB != true ]]; then
 		echo "declare -frg ${FUNCTIONS_LIB[*]}" >> "$OUTPUT"
 	fi
 fi
+
+# SRC
 if [[ $SRC_FILES ]]; then
 	echo >> "$OUTPUT"
 	log::tab "[src::header] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
@@ -701,6 +804,7 @@ if [[ $SRC_FILES ]]; then
 	fi
 	log::tab "[src] ------------> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	cat "$TMP_SRC" >> "$OUTPUT"
+	# DECLARE -FR
 	if [[ $DIRECTORY_IS_LIB != true ]]; then
 		log::tab "[src::declare] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 		local FUNCTIONS_SRC
@@ -713,10 +817,26 @@ if [[ $SRC_FILES ]]; then
 		fi
 	fi
 fi
+
+# SAFETY CHECK FOR DUPLICATE FUNCTION NAMES
+local FUNCTIONS_ALL=("${FUNCTIONS_LIB[@]}" "${FUNCTIONS_SRC[@]}")
+local FUNCTIONS_DUP=($(printf "%s\n" "${FUNCTIONS_ALL[@]}" | sort | uniq -d))
+log::debug "=== Function List ===" "${FUNCTIONS_ALL[@]}" &>/dev/tty
+
+if [[ $FUNCTIONS_DUP ]]; then
+	log::fail "Duplicate functions found: " "${FUNCTIONS_DUP[@]}" &>/dev/tty
+	exit 1
+else
+	log::debug "No duplicate functions found" &>/dev/tty
+fi
+
+# SAFETY END
 if [[ $DIRECTORY_IS_LIB != true ]]; then
 	log::tab "[safety::end] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$SAFETY_END" >> "$OUTPUT"
 fi
+
+# MAIN
 if [[ $EXISTS_MAIN ]]; then
 	echo >> "$OUTPUT"
 	log::tab "[main::header] ---> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
@@ -725,17 +845,27 @@ if [[ $EXISTS_MAIN ]]; then
 	cat "$TMP_MAIN" >> "$OUTPUT"
 	log::tab "[main::endof] ----> line $(($(wc -l "$OUTPUT" | cut -f1 -d ' ')+1))"
 	echo "$ENDOF_MAIN" >> "$OUTPUT"
+
+	# HBC INLINE VERSION/DATE REPLACEMENT
 	if [[ $DIRECTORY_NAME = hbc ]]; then
 		local VERSION_LINE
 		VERSION_LINE="$(printf "%s\n" "$(date -d @$EPOCHSECONDS "+%Y %B %d") | $EPOCHSECONDS | $(git rev-parse HEAD 2>/dev/null)")"
 		VERSION_LINE='printf "%s\\n" '\""$VERSION_LINE"\"''
+		# only replace first instace
 		sed -i '0,/___TEMPORARY___LINE___MEANT___FOR___REPLACEMENT___/s//'"$VERSION_LINE"'/' $OUTPUT
 		log::tab "hbc version replacement"
 	fi
 fi
+
+# END STATS (WC)
 log::tab "[${OUTPUT}] total lines: $(wc -l "$OUTPUT" | cut -f1 -d ' ')"
+
+#-------------------------------------------------------------------------------- END
+# CHMOD PERMISSIONS
 log::info "700 permissions"
 chmod 700 "${OUTPUT}"
+
+# SHELLCHECK
 if [[ $IGNORE = *ALL* || $IGNORE = *all* ]]; then
 	log::warn "skipping shellcheck"
 else
@@ -756,14 +886,19 @@ else
 	fi
 	___BEGIN___ERROR___TRACE___
 fi
+
+# DELETE TMP_DIR
 if [[ $TEST != true ]]; then
 	log::info "deleting $TMP_DIR"
 	rm -rf "$TMP_DIR"
 fi
+
+# FINAL
 log::ok "$OUTPUT"
 [[ $QUIET = true ]] && exec &>/dev/tty
 ___ENDOF___ERROR___TRACE___
 }
+# EXECUTE
 hbc $@
 if [[ $? = 0 && $RUN = true ]]; then
 	if [[ $TEST = true ]]; then

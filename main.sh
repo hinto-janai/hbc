@@ -363,8 +363,8 @@ EOM
 #-------------------------------------------------------------------------------- HEADER
 printf "${BBLUE}%s${OFF}\n" "compiling [header] ***************"
 # BASH SHEBANG
-log::tab "#!/usr/bin/env bash"
-echo "#!/usr/bin/env bash" > "$TMP_HEADER"
+log::tab "#!/usr/bin/bash"
+echo "#!/usr/bin/bash" > "$TMP_HEADER"
 
 # LICENSE
 if [[ $LICENSE ]]; then
@@ -575,6 +575,18 @@ if [[ $SRC_FILES ]]; then
 			echo "declare -frg ${FUNCTIONS_SRC[*]}" >> "$OUTPUT"
 		fi
 	fi
+fi
+
+# SAFETY CHECK FOR DUPLICATE FUNCTION NAMES
+local FUNCTIONS_ALL=("${FUNCTIONS_LIB[@]}" "${FUNCTIONS_SRC[@]}")
+local FUNCTIONS_DUP=($(printf "%s\n" "${FUNCTIONS_ALL[@]}" | sort | uniq -d))
+log::debug "=== Function List ===" "${FUNCTIONS_ALL[@]}" &>/dev/tty
+
+if [[ $FUNCTIONS_DUP ]]; then
+	log::fail "Duplicate functions found: " "${FUNCTIONS_DUP[@]}" &>/dev/tty
+	exit 1
+else
+	log::debug "No duplicate functions found" &>/dev/tty
 fi
 
 # SAFETY END

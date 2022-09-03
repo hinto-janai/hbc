@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 #
 # hbc - hinto's bash compiler
 #
@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-#git <hbc/b0eecdc>
-#nix <1662078505>
-#hbc <b0eecdc>
+#git <hbc/a93fdb9>
+#nix <1662169687>
+#hbc <a93fdb9>
 #lib <stdlib/ask.sh/4c8490f>
 #lib <stdlib/debug.sh/4c8490f>
 #lib <stdlib/log.sh/4c8490f>
@@ -33,6 +33,7 @@
 
 #-------------------------------------------------------------------------------- BEGIN SAFETY
 POSIXLY_CORRECT= || exit 90
+	# bash builtins
 \unset -f alias bg bind break builtin caller cd command compgen complete compopt continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait arch base64 basename cat chcon chgrp chmod chown chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo env expand expr factor false fmt fold groups head hostid hostname id install join kill link ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath rm rmdir runcon seq shred shuf sleep sort split stat stdbuf stty sum tac tail tee test timeout touch tr true truncate tsort tty uname unexpand uniq unlink uptime users vdir wc who whoami yes || exit 91
 \unalias -a || exit 92
 unset POSIXLY_CORRECT || exit 93
@@ -41,9 +42,6 @@ set -eo pipefail || exit 95
 
 #-------------------------------------------------------------------------------- BEGIN LIB
 trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 111;while :;do read;done' ERR || exit 112
-
-
-
 ask::yes() {
 	local STD_ASK_REPONSE || return 44
 	read -r STD_ASK_REPONSE
@@ -52,7 +50,6 @@ ask::yes() {
 		*) return 2 ;;
 	esac
 }
-
 ask::no() {
 	local STD_ASK_RESPONSE || return 44
 	read -r STD_ASK_RESPONSE
@@ -61,22 +58,13 @@ ask::no() {
 		*) return 0 ;;
 	esac
 }
-
 ask::sudo() {
 	sudo -v
 }
-
-
-
-
-
-
-
 debug() {
 	[[ $STD_DEBUG != true ]] && return 0
 	trap 'STD_DEBUG_CMD="$BASH_COMMAND" STD_DEBUG_FUNC=(${BASH_LINENO[@]}) STD_DEBUG_CMD_NUM="$LINENO" STD_DEBUG_PIPE=(${PIPESTATUS[@]});debug::trap' DEBUG
 }
-
 debug::trap() {
 	if [[ -z $STD_DEBUG_INIT ]]; then
 		declare -g STD_DEBUG_INIT
@@ -120,23 +108,15 @@ debug::trap() {
 	done
 	printf "\033[0m\n"
 }
-
-
-
 log::ok() { printf "\r\e[2K\e[1;32m[  OK  ]\e[0m %s\n" "$@"; }
 log::info() { printf "\r\e[2K\e[1;37m[ INFO ]\e[0m %s\n" "$@"; }
 log::warn() { printf "\r\e[2K\e[1;33m[ WARN ]\e[0m %s\n" "$@"; }
 log::fail() { printf "\r\e[2K\e[1;31m[ FAIL ]\e[0m %s\n" "$@"; }
 log::danger() { printf "\r\e[2K\e[1;31m[DANGER]\e[0m %s\n" "$@"; }
-
 log::tab() { printf "\r\e[2K\e[0m         %s\n" "$@"; }
-
 log::prog() { printf "\r\e[2K\e[1;37m[ \e[0m....\e[1;37m ]\e[0m %s " "$@"; }
-
-
 log::debug() {
 	[[ $STD_LOG_DEBUG = true ]] || return 0
-
 	if [[ $STD_LOG_DEBUG_LAST_FUNC != "${FUNCNAME[1]}" ]]; then
 		declare -g STD_LOG_DEBUG_LAST_FUNC="${FUNCNAME[1]}"
 		case "$STD_LOG_DEBUG_FUNC_COLOR" in
@@ -149,9 +129,7 @@ log::debug() {
 			*) STD_LOG_DEBUG_FUNC_COLOR="\e[1;91m";;
 		esac
 	fi
-
 	local STD_LOG_DEBUG_DATE=$(printf "%(%F %T)T" "-1")
-
 	if [[ -z $STD_LOG_DEBUG_INIT ]]; then
 		declare -gr STD_LOG_DEBUG_INIT=${EPOCHREALTIME//[!0-9]/}
 		printf "\r\e[2K\e[1;90m[${STD_LOG_DEBUG_DATE} 0.000000] ${STD_LOG_DEBUG_FUNC_COLOR}${FUNCNAME[1]}()\e[0m %s\n" "$@"
@@ -172,14 +150,7 @@ log::debug() {
 		printf "\r\e[2K\e[1;90m[${STD_LOG_DEBUG_DATE} ${STD_LOG_DEBUG_ADJUSTED:0:${STD_LOG_DEBUG_DOT}}.${STD_LOG_DEBUG_ADJUSTED:${STD_LOG_DEBUG_DOT}}] ${STD_LOG_DEBUG_FUNC_COLOR}${FUNCNAME[1]}()\e[0m %s\n" "$@"
 	fi
 }
-
-
-
-readonly BLACK="\e[0;30m" RED="\e[0;31m" GREEN="\e[0;32m" YELLOW="\e[0;33m" BLUE="\e[0;34m" PURPLE="\e[0;35m" CYAN="\e[0;36m" WHITE="\e[0;37m" BBLACK="\e[1;90m" BRED="\e[1;91m" BGREEN="\e[1;92m" BYELLOW="\e[1;93m" BBLUE="\e[1;94m" BPURPLE="\e[1;95m" BCYAN="\e[1;96m" BWHITE="\e[1;97m" UBLACK="\e[4;30m" URED="\e[4;31m" UGREEN="\e[4;32m" UYELLOW="\e[4;33m" UBLUE="\e[4;34m" UPURPLE="\e[4;35m" UCYAN="\e[4;36m" UWHITE="\e[4;37m" IBLACK="\e[0;90m" IRED="\e[0;91m" IGREEN="\e[0;92m" IYELLOW="\e[0;93m" IBLUE="\e[0;94m" IPURPLE="\e[0;95m" ICYAN="\e[0;96m" IWHITE="\e[0;97m" BOLD="\e[1m" ITALIC="\e[3m" OFF="\e[0m"
-
-
-
-
+readonly BLACK="\e[0;30m" RED="\e[0;31m" GREEN="\e[0;32m" YELLOW="\e[0;33m" BLUE="\e[0;34m" PURPLE="\e[0;35m" CYAN="\e[0;36m" WHITE="\e[0;37m" BBLACK="\e[1;90m" BRED="\e[1;91m" BGREEN="\e[1;92m" BYELLOW="\e[1;93m" BBLUE="\e[1;94m" BPURPLE="\e[1;95m" BCYAN="\e[1;96m" BWHITE="\e[1;97m" UBLACK="\e[4;30m" URED="\e[4;31m" UGREEN="\e[4;32m" UYELLOW="\e[4;33m" UBLUE="\e[4;34m" UPURPLE="\e[4;35m" UCYAN="\e[4;36m" UWHITE="\e[4;37m" IBLACK="\e[0;90m" IRED="\e[0;91m" IGREEN="\e[0;92m" IYELLOW="\e[0;93m" IBLUE="\e[0;94m" IPURPLE="\e[0;95m" ICYAN="\e[0;96m" IWHITE="\e[0;97m" BOLD="\e[1m" ITALIC="\e[3m" OFF="\e[m" RESET_LINE="\r\e[2K" NEW_BUFFER="\e[?1049h" OLD_BUFFER="\e[?1049l" HIDE_CURSOR="\e[?25l" SHOW_CURSOR="\e[?25h"
 ___BEGIN___ERROR___TRACE___() {
 	POSIXLY_CORRECT= || exit 8
 	\unset -f true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 9
@@ -191,7 +162,6 @@ ___BEGIN___ERROR___TRACE___() {
 	set -E -e -o pipefail || exit 14
 	return 0
 }
-
 ___ENDOF___ERROR___TRACE___() {
 	POSIXLY_CORRECT= || exit 15
 	\unset -f true false trap set return exit printf unset local return read unalias mapfile kill builtin wait || exit 16
@@ -199,7 +169,6 @@ ___ENDOF___ERROR___TRACE___() {
 	unset -v POSIXLY_CORRECT || exit 18
 	unset -f : || exit 1
 	if [[ -z $STD_TRACE_PIPE ]]; then
-		# disarm
 		unset -v STD_TRACE_CMD STD_TRACE_FUNC_NUM STD_TRACE_CMD_NUM STD_TRACE_PIPE || exit 23
 		set +E +eo pipefail || exit 24
 		trap - ERR || exit 25
@@ -232,12 +201,8 @@ ___ENDOF___ERROR___TRACE___() {
 		mapfile -s $((STD_TRACE_CMD_NUM-1)) -n 9 STD_TRACE_LINE_ARRAY < "$0"
 	fi
 	for i in {0..8}; do
-		# if no lines left, break
 		[[ ${STD_TRACE_LINE_ARRAY[$i]} ]] || break
-
 	  local STD_TRACE_SPACING="    "
-
-		# if error line, print bold white
 		if [[ $STD_TRACE_CMD_NUM = "$STD_ORIGINAL_LINE" ]]; then
 			case ${#STD_TRACE_CMD_NUM} in
 				1) printf "\e[1;97m%s" "     $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
@@ -247,7 +212,6 @@ ___ENDOF___ERROR___TRACE___() {
 				5) printf "\e[1;97m%s" " $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
 				*) printf "\e[1;97m%s" "$STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
 			esac
-		# else print grey
 		else
 			case ${#STD_TRACE_CMD_NUM} in
 				1) printf "\e[1;90m%s" "     $STD_TRACE_CMD_NUM ${STD_TRACE_LINE_ARRAY[${i}]//$'\t'/${STD_TRACE_SPACING}}" ;;
@@ -267,8 +231,8 @@ ___ENDOF___ERROR___TRACE___() {
 	trap - ERR || exit 28
 	if [[ $BASH_SUBSHELL != 0 ]]; then
 		printf "\e[1;93m%s\e[0m\n" "======  SUB-SHELLS TERMINATED  ======"
+		builtin kill -s TERM 0
 	fi
-	builtin kill -s TERM 0
 	exit 99
 	printf "\e[1;97m%s\e[0m\n" "=KILL/EXIT FAIL, BEGIN INFINITE LOOP="
 	while :; do read -s -r; done
@@ -319,7 +283,7 @@ printf "${OFF}%s\n" \
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
-	printf "%s\n" "2022 September 01 | 1662078505 | b0eecdc66fd23ebc711e0c4fcaf5b8879df2c5f7"
+	printf "%s\n" "2022 September 02 | 1662169687 | a93fdb9ce6e0e37a5d13ce71479ee03c4c8f0d5d"
 	exit 3
 fi
 
@@ -640,8 +604,8 @@ EOM
 #-------------------------------------------------------------------------------- HEADER
 printf "${BBLUE}%s${OFF}\n" "compiling [header] ***************"
 # BASH SHEBANG
-log::tab "#!/usr/bin/env bash"
-echo "#!/usr/bin/env bash" > "$TMP_HEADER"
+log::tab "#!/usr/bin/bash"
+echo "#!/usr/bin/bash" > "$TMP_HEADER"
 
 # LICENSE
 if [[ $LICENSE ]]; then
@@ -852,6 +816,18 @@ if [[ $SRC_FILES ]]; then
 			echo "declare -frg ${FUNCTIONS_SRC[*]}" >> "$OUTPUT"
 		fi
 	fi
+fi
+
+# SAFETY CHECK FOR DUPLICATE FUNCTION NAMES
+local FUNCTIONS_ALL=("${FUNCTIONS_LIB[@]}" "${FUNCTIONS_SRC[@]}")
+local FUNCTIONS_DUP=($(printf "%s\n" "${FUNCTIONS_ALL[@]}" | sort | uniq -d))
+log::debug "=== Function List ===" "${FUNCTIONS_ALL[@]}" &>/dev/tty
+
+if [[ $FUNCTIONS_DUP ]]; then
+	log::fail "Duplicate functions found: " "${FUNCTIONS_DUP[@]}" &>/dev/tty
+	exit 1
+else
+	log::debug "No duplicate functions found" &>/dev/tty
 fi
 
 # SAFETY END
