@@ -9,6 +9,12 @@
 ## usage: <FILE_PATH>
 LICENSE=
 
+## -b | --bang
+## add a custom shebang, the default is Bash with only the bare necessary environment variables:
+## [#!/usr/bin/env -iS EDITOR="${EDITOR}" HOME="${HOME}" LANG="${LANG}" PATH="${PATH}" PWD="${PWD}" TERM="${TERM}" USER="${USER}" bash]
+## usage: <CUSTOM_SHEBANG>
+BANG=
+
 ## -d | --delete
 ## overwrite output file if it already exists
 ## usage: <true|false>

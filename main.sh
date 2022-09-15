@@ -6,39 +6,40 @@
 
 hbc() {
 #-------------------------------------------------------------------------------- HBC OPTIONS
-___BEGIN___ERROR___TRACE___
+___BEGIN___TRACE___
 debug
 # HELP OPTION
 if [[ $* = *"-h"* || $* = *"--help"* ]]; then
 printf "${BWHITE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s\n\n" "USAGE: " "hbc " "--OPTION " "<ARGUMENT>"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
-"    -a" " |" " --add" "     <text file>" "          add a text file (like a license) on top of output, default: [LICENSE]" \
-"    -c" " |" " --config" "  <hbc config file>" "    specify hbc config to use, default: [\$PWD/hbc.conf] or [/etc/hbc.conf]"
+"    -a" " |" " --add" "     <text file>" "          Add a text file (like a license) on top of output, default: [LICENSE]" \
+"    -b" " |" " --bang" "    <shebang type>" "       Specify a shebang to use, default is Bash with a minimal environment" \
+"    -c" " |" " --config" "  <hbc config file>" "    Specify hbc config to use, default: [\$PWD/hbc.conf] or [/etc/hbc.conf]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${OFF}%s\n" \
-"    -d" " |" " --delete" "                       overwrite output file if it already exists" \
-"    -e" " |" " --expose" "                       expose all whitespace/comments, don't clean the output" \
-"    -f" " |" " --full" "                         fully clean the output, including [main.sh]"
+"    -d" " |" " --delete" "                       Overwrite output file if it already exists" \
+"    -e" " |" " --expose" "                       Expose all whitespace/comments, don't clean the output" \
+"    -f" " |" " --full" "                         Fully clean the output, including [main.sh]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
-"    -i" " |" " --ignore" "  <codes> or <ALL>" "     ignore shellcheck codes or disable shellcheck: [-i SC2154,SC2155] or [-i ALL]" \
-"    -l" " |" " --library" " <library directory>" "  specify where to look for lib code, default: [/usr/local/include]" \
-"    -m" " |" " --main" "    <main script name>" "   specify main script name, default: [main.sh]"
+"    -i" " |" " --ignore" "  <codes> or <ALL>" "     Ignore shellcheck codes or disable shellcheck: [-i SC2154,SC2155] or [-i ALL]" \
+"    -l" " |" " --library" " <library directory>" "  Specify where to look for lib code, default: [/usr/local/include]" \
+"    -m" " |" " --main" "    <main script name>" "   Specify main script name, default: [main.sh]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${OFF}%s\n" \
-"    -h" " |" " --help" "                         print this help message and exit unsuccessfully"
+"    -h" " |" " --help" "                         Print this help message and exit unsuccessfully"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
-"    -o" " |" " --output" "  <output name>" "        specify output filename, default: [\$FOLDER_NAME.sh]"
+"    -o" " |" " --output" "  <output name>" "        Specify output filename, default: [\$FOLDER_NAME.sh]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${OFF}%s\n" \
-"    -q" " |" " --quiet" "                        suppress hbc compile-time output (exit codes stay)" \
-"    -r" " |" " --run" "                          run output file if hbc successfully compiles"
+"    -q" " |" " --quiet" "                        Suppress hbc compile-time output (exit codes stay)" \
+"    -r" " |" " --run" "                          Run output file if hbc successfully compiles"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${BYELLOW}%s${OFF}%s\n" \
-"    -s" " |" " --source" "  <source directory>" "   specify where to look for src code, default: [src]"
+"    -s" " |" " --source" "  <source directory>" "   Specify where to look for src code, default: [src]"
 printf "${BPURPLE}%s${OFF}%s${BPURPLE}%s${OFF}%s\n" \
-"    -t" " |" " --test" "                         --run & --quiet the output from memory, no file made" \
-"    -v" " |" " --version" "                      print this hbc's time of compile and exit unsuccessfully"
+"    -t" " |" " --test" "                         [--run] & [--quiet] the output from memory, no file made" \
+"    -v" " |" " --version" "                      Print this hbc's time of compile and exit unsuccessfully"
 printf "${OFF}%s\n" \
 	"" \
 	"hbc - hinto's bash compiler" \
-	"Full documentation <https://github.com/hinto-janaiyo/hbc>" \
-	"Copyright (c) 2022 hinto-janaiyo <https://github.com/hinto-janaiyo>"
+	"Full documentation: <https://github.com/hinto-janaiyo/hbc>" \
+	"Copyright (c) 2022, hinto-janaiyo <https://github.com/hinto-janaiyo>"
 exit 2
 # VERSION OPTION
 elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
@@ -47,14 +48,20 @@ elif [[ $* = *"-v"* || $* = *"--version"* ]]; then
 fi
 
 # UNSET ENVIRONMENT
-unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE EXPOSE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
+#unset -v ADD OPTIONS CONFIG FULL LICENSE DELETE EXPOSE IGNORE LIBRARY MAIN OUTPUT QUIET RUN SOURCE TEST
 
 # PARSE CONFIG FILE (because directly sourcing is spooky)
 hbc_parse_config() {
 	local i IFS=$'\n' OPTIONS || return 1
 	mapfile OPTIONS < $1 || return 2
 	for i in ${OPTIONS[@]}; do
-	    [[ $i =~ ^ADD=[[:alnum:]./_-]*$ ]]                   && declare -g LICENSE="${i/*=/}"
+		[[ $i =~ ^ADD=[[:alnum:]./_-]*$ ]]                   && declare -g LICENSE="${i/*=/}"
+		# shebang is complicated, needs to be parsed
+		if [[ $i =~ ^BANG=.*'#!'.*$ ]]; then
+			BANG="${i/BANG=\'}"
+			BANG="${BANG/BANG=\"}"
+			declare -g BANG="${BANG:0:-1}"
+		fi
 	    [[ $i =~ ^DELETE=true[[:space:]]*$ ]]                && declare -g DELETE=true
 	    [[ $i =~ ^EXPOSE=true[[:space:]]*$ ]]                && declare -g EXPOSE=true
 		[[ $i =~ ^FULL=true[[:space:]]*$ ]]                  && declare -g FULL=true
@@ -72,6 +79,7 @@ hbc_parse_config() {
 	log::debug \
 		"=== hbc_parse_config ===" \
 		"ADD     | $LICENSE" \
+		"BANG    | $BANG"    \
 		"CONFIG  | $CONFIG"  \
 		"DELETE  | $DELETE"  \
 		"EXPOSE  | $EXPOSE"  \
@@ -131,6 +139,13 @@ case $1 in
 			exit 1
 		fi
 		LICENSE="$1"; shift;;
+	-b | --bang)
+		shift
+		if [[ -z $1 ]]; then
+			log::fail "hbc: no arg after --bang"
+			exit 1
+		fi
+		BANG="$1"; shift;;
 	-c | --config) shift; shift;;
 	-d | --delete) local DELETE=true; shift;;
 	-e | --expose) local EXPOSE=true; shift;;
@@ -178,7 +193,7 @@ esac
 done
 # to make the config test work
 [[ $TEST = true ]] && RUN=true QUIET=true
-___ENDOF___ERROR___TRACE___
+___ENDOF___TRACE___
 
 #-------------------------------------------------------------------------------- SANITY CHECKS
 # CONFIG
@@ -247,10 +262,14 @@ elif [[ $OUTPUT != [A-Za-z0-9_/]* ]]; then
 fi
 
 # DEBUG OPTION PRINTS
-log::debug "=== post --option debug ===" \
+log::debug \
+	"=== hbc_parse_config ===" \
 	"ADD     | $LICENSE" \
+	"BANG    | $BANG"    \
 	"CONFIG  | $CONFIG"  \
 	"DELETE  | $DELETE"  \
+	"EXPOSE  | $EXPOSE"  \
+	"FULL    | $FULL"    \
 	"IGNORE  | $IGNORE"  \
 	"LIBRARY | $LIBRARY" \
 	"MAIN    | $MAIN"    \
@@ -274,7 +293,7 @@ fi
 [[ $QUIET = true ]] && exec 3>&1 &>/dev/null
 
 #-------------------------------------------------------------------------------- VARIABLE INIT
-___BEGIN___ERROR___TRACE___
+___BEGIN___TRACE___
 
 # HEADERS
 local HEADER_SAFETY="#-------------------------------------------------------------------------------- BEGIN SAFETY"
@@ -343,13 +362,13 @@ EOM
 )
 # lib
 SAFETY_LIB=$(cat << 'EOM'
-trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 111;while :;do read;done' ERR || exit 112
+trap 'printf "%s\n" "@@@@@@ LIB PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] ${BASH_SOURCE}" "[code] $?";exit 111;while :;do read;done' ERR || exit 112
 EOM
 )
 # src
 local SAFETY_SRC
 SAFETY_SRC=$(cat << 'EOM'
-trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] $_" "[code] $?";set +eo pipefail;trap - ERR;exit 113;while :;do read;done' ERR || exit 114
+trap 'printf "%s\n" "@@@@@@ SRC PANIC @@@@@@" "[line] ${LINENO}: ${BASH_COMMAND}" "[file] ${BASH_SOURCE}" "[code] $?";exit 113;while :;do read;done' ERR || exit 114
 EOM
 )
 # safety end
@@ -363,8 +382,14 @@ EOM
 #-------------------------------------------------------------------------------- HEADER
 printf "${BBLUE}%s${OFF}\n" "compiling [header] ***************"
 # BASH SHEBANG
-log::tab "#!/usr/bin/bash"
-echo "#!/usr/bin/bash" > "$TMP_HEADER"
+if [[ $BANG ]]; then
+	log::tab "$BANG"
+	echo "$BANG" > "$TMP_HEADER"
+else
+	BANG='#!/usr/bin/env -iS EDITOR="${EDITOR}" HOME="${HOME}" LANG="${LANG}" PATH="${PATH}" PWD="${PWD}" TERM="${TERM}" USER="${USER}" bash'
+	log::tab "$BANG"
+	echo "$BANG" > "$TMP_HEADER"
+fi
 
 # LICENSE
 if [[ $LICENSE ]]; then
@@ -586,7 +611,7 @@ if [[ $FUNCTIONS_DUP ]]; then
 	log::fail "Duplicate functions found: " "${FUNCTIONS_DUP[@]}" &>/dev/tty
 	exit 1
 else
-	log::debug "No duplicate functions found" &>/dev/tty
+	log::debug "" "=== No duplicate functions found ===" &>/dev/tty
 fi
 
 # SAFETY END
@@ -628,7 +653,7 @@ chmod 700 "${OUTPUT}"
 if [[ $IGNORE = *ALL* || $IGNORE = *all* ]]; then
 	log::warn "skipping shellcheck"
 else
-	___ENDOF___ERROR___TRACE___
+	___ENDOF___TRACE___
 	log::info "starting shellcheck"
 	if [[ $QUIET = true ]]; then
 		if [[ $IGNORE ]]; then
@@ -643,7 +668,7 @@ else
 			shellcheck "${OUTPUT}" --shell bash || exit
 		fi
 	fi
-	___BEGIN___ERROR___TRACE___
+	___BEGIN___TRACE___
 fi
 
 # DELETE TMP_DIR
@@ -655,7 +680,7 @@ fi
 # FINAL
 log::ok "$OUTPUT"
 [[ $QUIET = true ]] && exec &>/dev/tty
-___ENDOF___ERROR___TRACE___
+___ENDOF___TRACE___
 }
 # EXECUTE
 hbc $@
